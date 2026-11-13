@@ -82,4 +82,102 @@ select public.change_clinic_appointment_status(current_setting('clinic_test.appo
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000002', true);
 select * from public.book_clinic_appointment(current_setting('clinic_test.slot')::uuid, 'Dental appointment', 'Test');
 
+do $$
+begin
+  begin
+    perform public.clinic_appointment_history(current_setting('clinic_test.appointment')::uuid);
+    raise exception 'Student can read another student''s appointment history';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform public.read_clinic_visit(current_setting('clinic_test.appointment')::uuid);
+    raise exception 'Student can read clinical records';
+  exception when insufficient_privilege then null;
+  end;
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000003', true);
+do $$
+declare
+  schedule_key uuid := (select schedule_id from public.slots where id = current_setting('clinic_test.slot')::uuid);
+begin
+  begin
+    perform public.edit_clinic_schedule(schedule_key, time '09:00', time '09:30', 30::smallint, 1::smallint);
+    raise exception 'An edit moved an active booking';
+  exception when raise_exception then
+    if sqlerrm <> 'Keep booked times and enough capacity for their existing requests' then raise; end if;
+  end;
+  perform public.cancel_clinic_schedule(schedule_key, 'Clinic closed');
+  if exists (
+    select 1 from public.appointments where slot_id = current_setting('clinic_test.slot')::uuid
+      and status <> 'cancelled'
+  ) then
+    raise exception 'Schedule cancellation left an active booking';
+  end if;
+end;
+$$;
+
+reset role;
+insert into auth.users (id, email, email_confirmed_at)
+values ('00000000-0000-4000-8000-000000000004', 'physician@clinic.test', now());
+insert into public.staff_roles (user_id, role)
+values ('00000000-0000-4000-8000-000000000004', 'physician');
+insert into public.appointments (id, reference_number, student_id, slot_id, reason, concern, status)
+values ('00000000-0000-4000-8000-000000000011', 'TEST-CERTIFICATE',
+  '00000000-0000-4000-8000-000000000001', current_setting('clinic_test.slot')::uuid,
+  'Medical certificate', 'Synthetic certificate visit', 'checked_in');
+
+set local role authenticated;
+select public.save_clinic_visit('00000000-0000-4000-8000-000000000011', '{"pulse":72,"notes":"Synthetic notes"}');
+select public.change_clinic_appointment_status('00000000-0000-4000-8000-000000000011', 'completed');
+do $$
+begin
+  begin
+    perform public.release_clinic_certificate('00000000-0000-4000-8000-000000000011', 'First Student');
+    raise exception 'Nurse released an unauthorized certificate';
+  exception when raise_exception then
+    if sqlerrm <> 'Only authorized certificates can be released' then raise; end if;
+  end;
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000004', true);
+select public.read_clinic_visit('00000000-0000-4000-8000-000000000011');
+select public.authorize_clinic_certificate('00000000-0000-4000-8000-000000000011', 'Synthetic certificate statement');
+
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
+do $$
+begin
+  if exists (select 1 from public.certificates where appointment_id = '00000000-0000-4000-8000-000000000011') then
+    raise exception 'Student read an authorized but unreleased certificate';
+  end if;
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000003', true);
+select public.release_clinic_certificate('00000000-0000-4000-8000-000000000011', 'First Student');
+do $$
+begin
+  if not exists (
+    select 1 from public.audit_log where reference_number = 'TEST-CERTIFICATE'
+      and action = 'visit_record_accessed' and actor_role = 'physician'
+  ) then
+    raise exception 'Physician record access was not audited';
+  end if;
+end;
+$$;
+
+select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
+do $$
+begin
+  if not exists (
+    select 1 from public.certificates where appointment_id = '00000000-0000-4000-8000-000000000011'
+      and status = 'released' and student_name = 'First Student'
+  ) then
+    raise exception 'Student cannot read their released certificate';
+  end if;
+end;
+$$;
+
 rollback;
