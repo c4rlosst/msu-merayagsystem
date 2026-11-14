@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { database, storageAdmin, saveSession, clearSession, requireRole } from '../lib/session.js';
 import { reasons } from '../lib/clinic.js';
 import { fetchBookings } from '../lib/bookings.js';
+import { staffAccount, staffPattern } from '../lib/staff-id.js';
 
 const uid = z.uuid();
 const detail = (id) => '/clinic/appointment/' + id;
@@ -18,11 +19,15 @@ async function limited(scope, value) {
   return data !== true;
 }
 
-export async function signIn(nurse, _, form) {
+// `kind` is false for students, or 'nurse' / 'admin' for the ID-and-password staff sign-ins.
+export async function signIn(kind, _, form) {
+  const nurse = Boolean(kind);
   const nurseId = String(form.get('nurse_id') ?? '').trim().toUpperCase();
-  if (nurse && !/^N-?[0-9]{2,8}$/.test(nurseId)) return { error: 'Enter your nurse ID, such as N-01.' };
+  if (nurse && !staffPattern[kind].test(nurseId)) {
+    return { error: kind === 'admin' ? 'Enter your administrator ID, such as A-01.' : 'Enter your nurse ID, such as N-01.' };
+  }
   const email = emailField.safeParse(nurse
-    ? nurseAccount(nurseId)
+    ? staffAccount(nurseId)
     : String(form.get('email') ?? '').trim().toLowerCase());
   if (!email.success) return { error: 'Enter a valid school email address.' };
   const code = String(form.get('code') ?? '').trim();
@@ -62,11 +67,11 @@ export async function signIn(nurse, _, form) {
     const { data, error } = await auth.signInWithPassword({ email: email.data, password });
     if (error || !data.session || !data.user?.email_confirmed_at) {
       return { error: nurse
-        ? 'Sign-in failed. Check your nurse ID and password, or contact the infirmary.'
+        ? 'Sign-in failed. Check your ' + (kind === 'admin' ? 'administrator' : 'nurse') + ' ID and password, or contact the infirmary.'
         : 'Sign-in failed. Check your email and clinic account password, or contact the infirmary.' };
     }
     const { data: role } = await database(data.session.access_token).rpc('current_clinic_role');
-    if (nurse && role !== 'nurse') return { error: 'This account does not have active nurse access.' };
+    if (nurse && role !== kind) return { error: 'This account does not have active ' + kind + ' access.' };
     if (!role || (role === 'student' && !domains.includes(email.data.split('@')[1]))) {
       return { error: 'Use your approved university account to sign in.' };
     }
@@ -124,10 +129,6 @@ export async function manageStaffAccess(_, form) {
   redirect('/clinic/admin');
 }
 
-function nurseAccount(id) {
-  return id.replace('-', '').toLowerCase() + '@nurses.merayag.invalid';
-}
-
 export async function createNurseAccount(_, form) {
   const { db } = await requireRole('admin');
   const id = String(form.get('nurse_id') ?? '').trim().toUpperCase();
@@ -138,7 +139,7 @@ export async function createNurseAccount(_, form) {
   if (typeof password !== 'string' || password.length < 6 || Buffer.byteLength(password, 'utf8') > 72) {
     return { error: 'Use a password with at least 6 characters and at most 72 bytes.' };
   }
-  const email = nurseAccount(id);
+  const email = staffAccount(id);
   const admin = storageAdmin().auth.admin;
   const { data, error } = await admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: name.data } });
   if (error || !data.user) return { error: 'Could not create the account. Check whether the nurse ID is already in use.' };

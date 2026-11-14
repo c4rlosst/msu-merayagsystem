@@ -39,14 +39,15 @@ export function ActionForm({ action, children, label, className }) {
   </form>;
 }
 
-export function LoginForm({ signup = false, password = false, nurse = false, emailDomain }) {
-  const [state, dispatch, pending] = useActionState(signIn.bind(null, nurse), {});
+export function LoginForm({ signup = false, password = false, nurse = false, admin = false, emailDomain }) {
+  const [state, dispatch, pending] = useActionState(signIn.bind(null, admin ? 'admin' : nurse ? 'nurse' : false), {});
+  const staff = nurse || admin;
   // With a single school domain, people only type the part before the @. The domain appears in the field
   // once they press @ (or paste a full address); the full address is always sent as `email`.
   const [username, setUsername] = useState('');
   const [domainShown, setDomainShown] = useState(false);
   const [matched, setMatched] = useState(null); // chars of the domain typed by hand since "@" (null: not typing it)
-  const presetEmail = !nurse && emailDomain && !state.email;
+  const presetEmail = !staff && emailDomain && !state.email;
   function changeUsername(event) {
     const raw = event.target.value, kind = event.nativeEvent.inputType ?? '';
     const clean = (text) => text.replace(/\s/g, '');
@@ -69,7 +70,7 @@ export function LoginForm({ signup = false, password = false, nurse = false, ema
     setMatched(null);
   }
   return <form action={dispatch} className="form-stack">
-    {nurse ? <label>Nurse ID<input name="nurse_id" autoComplete="username" placeholder="N-01" maxLength={10} required /></label> :
+    {staff ? <label>{admin ? 'Administrator ID' : 'Nurse ID'}<input name="nurse_id" autoComplete="username" placeholder={admin ? 'A-01' : 'N-01'} maxLength={10} required /></label> :
       presetEmail ? <label>School email
         <span className="email-group" data-domain={domainShown}>
           <span className="email-sizer" data-value={username}>

@@ -1,4 +1,5 @@
 import { requireRole } from '../../lib/session.js';
+import { accountLabel } from '../../lib/staff-id.js';
 import { ClinicShell } from './clinic-shell.js';
 
 // Signed-in frame for every clinic page. Pages still check their own role; this keeps the sidebar
@@ -9,8 +10,7 @@ export default async function ClinicLayout({ children }) {
   const meta = user.user_metadata ?? {};
   if (role !== 'student') {
     // Staff: a nurse signs in with an ID kept as a private email address, so show the name and the ID.
-    const account = user.email.endsWith('@nurses.merayag.invalid')
-      ? user.email.split('@')[0].toUpperCase().replace(/^N-?/, 'N-') : user.email;
+    const account = accountLabel(user.email);
     const named = meta.full_name || meta.name;
     return <ClinicShell role={role} email={user.email} name={named || account} detail={named ? account : ''}>{children}</ClinicShell>;
   }
