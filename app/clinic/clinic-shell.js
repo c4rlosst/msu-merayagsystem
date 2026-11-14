@@ -8,7 +8,7 @@ import { signOut } from '../actions.js';
 const roleNames = { student: 'Student', nurse: 'Nurse', physician: 'Physician', admin: 'Administrator' };
 const links = {
   student: [['/clinic', 'Home'], ['/clinic/book', 'Book'], ['/clinic/appointments', 'My appointments'], ['/clinic/profile', 'My profile']],
-  nurse: [['/clinic', 'Clinic desk'], ['/clinic/calendar', 'Calendar'], ['/clinic/audit', 'Audit log']],
+  nurse: [['/clinic', 'Clinic desk'], ['/clinic/calendar', 'Calendar'], ['/clinic/slots', 'Open slots'], ['/clinic/audit', 'Audit log']],
   physician: [['/clinic', 'Certificates']],
   admin: [['/clinic/admin', 'Staff access'], ['/clinic/audit', 'Audit log']]
 };

@@ -1,13 +1,13 @@
 'use client';
 import { useState } from 'react';
-import { BookingForm } from '../forms.js';
+import { SlotBooking } from '../slot-booking.js';
 import { reasons } from '../../lib/clinic.js';
 
-export function PreviewBooking() {
+export function PreviewBooking({ slots }) {
   const [ready, setReady] = useState(false);
   return <>
-    <header className="page-heading"><h1>Book an appointment</h1><p>Tell the nurse how soon you need a visit.</p></header>
-    {ready ? <BookingForm reasons={reasons} preview /> :
+    <header className="page-heading"><h1>Book an appointment</h1><p>Pick a day with open times, choose a time, and tell the nurse why you’re coming.</p></header>
+    {ready ? <SlotBooking slots={slots} reasons={reasons} requestHref="/preview?page=book" preview /> :
       <section className="profile-prompt"><h2>Complete your student details first</h2><p>The clinic uses your student ID to match your visit to your record.</p>
         <form className="paper form-stack" onSubmit={(event) => { event.preventDefault(); setReady(true); }}>
           <h2>Personal information</h2>

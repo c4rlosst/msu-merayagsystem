@@ -206,6 +206,37 @@ export async function submitBooking(_, form) {
   redirect(detail(data.id));
 }
 
+const slotBooking = z.object({ slot: z.uuid(), reason: z.enum(reasons), concern: z.string().trim().min(1).max(4000) });
+
+// Books one of the open times the nurses published. The database holds the place, so two students
+// can't take the last one, and the nurse then confirms the visit.
+export async function submitSlotBooking(_, form) {
+  const { db, user } = await requireRole('student');
+  const input = slotBooking.safeParse(Object.fromEntries(form));
+  if (!input.success) return { error: 'Choose a day and time, a visit reason, and describe your concern.' };
+  if (await limited('booking', user.id)) return { error: 'Too many booking attempts. Try again in a minute.' };
+  const { slot, reason, concern } = input.data;
+  let upload;
+  try {
+    upload = await uploadLetter(user, form.get('letter'), reason === 'Medical certificate');
+  } catch (error) {
+    return { error: error.message };
+  }
+  const { data, error } = await db.rpc('book_clinic_appointment', {
+    selected_slot: slot, visit_reason: reason, student_concern: concern, ...upload.payload
+  }).single();
+  if (error || !data) {
+    if (upload.path && error?.code) {
+      const { data: linked, error: lookupError } = await db.from('appointment_attachments')
+        .select('appointment_id').eq('object_id', upload.payload.letter_object).maybeSingle();
+      if (linked) redirect(detail(linked.appointment_id));
+      if (!lookupError && /^[0-9A-Z]{5}$/.test(error.code)) await upload.bucket.remove([upload.path]);
+    }
+    return { error: safeError(error, 'Your booking could not be completed. Check My appointments before trying again.') };
+  }
+  redirect(detail(data.id));
+}
+
 function safeError(error, fallback) {
   return error?.code === 'P0001' ? error.message : fallback;
 }
@@ -233,6 +264,7 @@ export async function clinicAction(kind, _, form) {
     result = await db.from('profiles').upsert({ ...parsed.data, user_id: user.id });
     destination = '/clinic/book';
   } else if (kind === 'schedule' || kind === 'edit_schedule') {
+    destination = '/clinic/slots';
     const parsed = schedule.safeParse(fields);
     if (!parsed.success || (kind === 'edit_schedule' && !uid.safeParse(fields.id).success)) {
       return { error: 'Enter a valid date, hours, slot length, and capacity.' };
@@ -262,7 +294,7 @@ export async function clinicAction(kind, _, form) {
         const reason = z.string().trim().min(1).max(1000).safeParse(fields.explanation);
         if (!reason.success) return { error: 'Enter a cancellation reason.' };
         result = await db.rpc('cancel_clinic_schedule', { schedule_key: id, explanation: reason.data });
-        destination = '/clinic';
+        destination = '/clinic/slots';
         break;
       }
       case 'status': {

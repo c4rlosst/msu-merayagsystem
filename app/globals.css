@@ -474,3 +474,60 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .skeleton-bar.card{height:8rem;border-radius:1rem}
 @keyframes skeleton{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.skeleton-bar{animation:none}}
+
+/* Booking form: compact pill choices plus a "what happens next" panel that uses the width */
+.booking-layout{display:grid;grid-template-columns:minmax(0,1fr) 18.5rem;gap:1.4rem;align-items:start}
+.booking-layout>.paper{margin:0}
+.chip-field{min-width:0;margin:0;padding:0;border:0}
+.chip-field legend{padding:0;margin-bottom:.55rem;font-weight:650;font-size:.92rem}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{position:relative;display:inline-flex;align-items:center;min-height:2.6rem;padding:.5rem 1rem;border:1px solid #d9ccd1;border-radius:2rem;background:#fff;color:var(--text);font-size:.92rem;font-weight:600;cursor:pointer}
+.chip input{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;padding:0;opacity:0;cursor:pointer}
+.chip:hover{border-color:#b98fa0;background:var(--tint)}
+.chip:has(input:checked){background:var(--wine);border-color:var(--wine);color:#fff}
+.chip:has(input:focus-visible){outline:3px solid var(--maroon);outline-offset:2px}
+.next-steps{position:sticky;top:1.5rem}
+.next-steps h2{margin:0 0 1rem}
+.next-steps ol{display:grid;gap:.9rem;margin:0 0 1.3rem;padding:0;list-style:none;counter-reset:step}
+.next-steps li{position:relative;padding-left:2.3rem;counter-increment:step;color:var(--text)}
+.next-steps li::before{content:counter(step);position:absolute;left:0;top:-.05rem;display:grid;place-items:center;width:1.6rem;height:1.6rem;border-radius:50%;background:var(--tint);color:var(--maroon);font-size:.85rem;font-weight:700}
+.next-steps .alert-note{margin:0;padding-left:.8rem;border-left:3px solid #b3173f;color:var(--text)}
+@media (max-width:1000px){.booking-layout{grid-template-columns:minmax(0,1fr)}.next-steps{position:static}}
+
+/* Student slot booking: calendar and open times on the left, visit details on the right */
+.slot-booking{display:grid;grid-template-columns:minmax(0,23rem) minmax(0,1fr);gap:1.4rem;align-items:start}
+.slot-booking>.paper{margin:0}
+.slot-picker{display:grid;gap:1.2rem}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.cal-head h2{margin:0;font-size:1.05rem}
+.workspace .cal-head button.quiet{min-height:2.3rem;min-width:2.3rem;padding:0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.2rem;text-align:center}
+.cal-dow{padding-bottom:.3rem;font-size:.75rem;font-weight:650;color:var(--mute)}
+.workspace .cal-day{position:relative;min-height:2.5rem;padding:0;border:1px solid transparent;border-radius:.6rem;background:transparent;color:#a99ca2;font-weight:600}
+.workspace .cal-day.has-slots{background:#fff;border-color:var(--rule);color:var(--text)}
+.workspace .cal-day.has-slots::after{content:"";position:absolute;bottom:.28rem;left:50%;width:.32rem;height:.32rem;margin-left:-.16rem;border-radius:50%;background:var(--signal)}
+.workspace .cal-day:hover:not(:disabled){background:var(--tint);color:var(--text)}
+.workspace .cal-day[aria-pressed="true"],.workspace .cal-day[aria-pressed="true"]:hover:not(:disabled){background:var(--wine);border-color:var(--wine);color:#fff}
+.workspace .cal-day:disabled{cursor:default;opacity:1}
+.slot-field{min-width:0;margin:0;padding:0;border:0}
+.slot-field legend{padding:0;margin-bottom:.6rem;font-weight:650;font-size:.92rem}
+.slot-times{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;max-height:17rem;overflow-y:auto}
+.slot{position:relative;display:grid;gap:0;padding:.55rem .85rem;border:1px solid #d9ccd1;border-radius:.8rem;background:#fff;color:var(--text);cursor:pointer}
+.slot b{font-weight:650}
+.slot small{color:var(--mute);font-weight:500}
+.slot input{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;padding:0;opacity:0;cursor:pointer}
+.slot:hover{border-color:#b98fa0;background:var(--tint)}
+.slot:has(input:checked){background:var(--wine);border-color:var(--wine);color:#fff}
+.slot:has(input:checked) small{color:#e7cdd6}
+.slot:has(input:focus-visible){outline:3px solid var(--maroon);outline-offset:2px}
+.slot-summary{margin:0;min-height:1.4rem;font-weight:650;color:var(--wine)}
+.slot-fallback{margin:0;font-size:.9rem}
+.no-slots{max-width:34rem}
+.no-slots h2{margin:0 0 .4rem}
+.no-slots p{margin:0 0 1.1rem}
+@media (max-width:900px){.slot-booking{grid-template-columns:minmax(0,1fr)}}
+
+.slot-cancel{font-size:.9rem}
+.slot-cancel summary{cursor:pointer;color:var(--maroon);font-weight:600}
+.slot-cancel[open]{grid-column:1/-1}
+.slot-cancel form{margin-top:.8rem}

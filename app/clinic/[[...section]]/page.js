@@ -8,6 +8,8 @@ import { AppointmentList } from '../../../lib/appointment-list.js';
 import { StudentDashboard, VisitDate } from '../../../lib/student-dashboard.js';
 import { clinicAction, createNurseAccount, manageStaffAccess } from '../../actions.js';
 import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
+import { SlotBooking } from '../../slot-booking.js';
+import { manilaDate, timeLabel } from '../../../lib/manila.js';
 
 const roleNames = { student: 'Student', nurse: 'Nurse', physician: 'Physician', admin: 'Administrator' };
 function Heading({ title, children }) {
@@ -41,11 +43,13 @@ export default async function Clinic({ params, searchParams }) {
   } else if (section.length === 1 && screen === 'appointments' && role === 'student') {
     content = await Appointments({ db });
   } else if (section.length === 1 && screen === 'book' && role === 'student') {
-    content = await Book({ db, user });
+    content = await Book({ db, user, filters: await searchParams });
   } else if (section.length === 1 && screen === 'profile' && role === 'student') {
     content = await Profile({ db, user });
   } else if (section.length === 1 && screen === 'calendar' && role === 'nurse') {
     content = await NurseCalendar({ db, filters: await searchParams });
+  } else if (section.length === 1 && screen === 'slots' && role === 'nurse') {
+    content = await Slots({ db });
   } else if (section.length === 1 && screen === 'releases' && role === 'nurse') {
     content = await ReleaseQueue({ db });
   } else if (section.length === 1 && screen === 'audit' && ['nurse', 'admin'].includes(role)) {
@@ -117,11 +121,65 @@ async function Profile({ db, user }) {
     </ActionForm></>;
 }
 
-async function Book({ db, user }) {
+async function Book({ db, user, filters }) {
   const profile = checked(await db.from('profiles').select('user_id').eq('user_id', user.id).maybeSingle());
   if (!profile) return <><Heading title="Book an appointment">Complete your student details before requesting a visit.</Heading><section className="profile-prompt"><h2>Complete your student details first</h2><p>The clinic uses your student ID to match your visit to your record.</p>{await Profile({ db, user })}</section></>;
-  return <><Heading title="Request an appointment">Tell us what brings you in and how soon you need a visit. The nurse will choose your date and time.</Heading>
-    <BookingForm reasons={reasons} /></>;
+  if (filters?.mode === 'request') {
+    return <><Heading title="Request an appointment">Tell us what brings you in and how soon you need a visit. The nurse will choose your date and time.</Heading>
+      <BookingForm reasons={reasons} /><p><Link href="/clinic/book">Back to open times</Link></p></>;
+  }
+  const rows = checked(await db.from('slots').select('id, starts_at, ends_at, capacity, held_count')
+    .gt('starts_at', new Date().toISOString()).is('retired_at', null).order('starts_at').limit(600));
+  const slots = rows.filter((slot) => slot.capacity > slot.held_count).map((slot) => ({
+    id: slot.id, start: Date.parse(slot.starts_at), end: Date.parse(slot.ends_at), left: slot.capacity - slot.held_count
+  }));
+  return <><Heading title="Book an appointment">Pick a day with open times, choose a time, and tell the nurse why you’re coming. A nurse will confirm your visit.</Heading>
+    <SlotBooking slots={slots} reasons={reasons} requestHref="/clinic/book?mode=request" /></>;
+}
+
+async function Slots({ db }) {
+  const today = manilaDate(Date.now());
+  const schedules = checked(await db.from('schedules')
+    .select('id, clinic_date, opens_at, closes_at, slot_minutes, capacity, cancelled_at')
+    .gte('clinic_date', today).order('clinic_date').limit(60));
+  const booked = new Map();
+  if (schedules.length) {
+    for (const row of checked(await db.from('slots').select('schedule_id, capacity, held_count').in('schedule_id', schedules.map((item) => item.id)))) {
+      const total = booked.get(row.schedule_id) ?? { places: 0, held: 0 };
+      total.places += row.capacity;
+      total.held += row.held_count;
+      booked.set(row.schedule_id, total);
+    }
+  }
+  const clock = (time) => { const [hour, minute] = time.split(':').map(Number); return timeLabel(hour * 60 + minute); };
+  return <><Heading title="Open slots">Publish the times students can book. Students see them as soon as you open a day.</Heading>
+    <ActionForm action={clinicAction.bind(null, 'schedule')} label="Open these times" className="paper form-stack">
+      <h2>Open a clinic day</h2>
+      <div className="field-grid">
+        <label>Date<input type="date" name="date" min={today} required /></label>
+        <label>Length of each visit (minutes)<input type="number" name="slot_length" min="5" max="240" defaultValue="30" required /></label>
+        <label>Opens<input type="time" name="opening" defaultValue="08:00" required /></label>
+        <label>Closes<input type="time" name="closing" defaultValue="12:00" required /></label>
+        <label>Students per time<input type="number" name="slot_capacity" min="1" max="50" defaultValue="1" required />
+          <small>How many students can book the same time.</small></label>
+      </div>
+    </ActionForm>
+    <section><h2>Upcoming days</h2>
+      {schedules.length ? <div className="paper list">{schedules.map((item) => {
+        const total = booked.get(item.id) ?? { places: 0, held: 0 };
+        return <div className="visit-row" key={item.id}>
+          <VisitDate value={item.clinic_date + 'T00:00:00+08:00'} />
+          <span className="visit-what"><strong>{clock(item.opens_at)} – {clock(item.closes_at)}</strong>
+            <span className="visit-sub"><span>{item.slot_minutes}-minute visits</span><span>{total.held} of {total.places} places booked</span></span></span>
+          {item.cancelled_at ? <span className="badge cancelled">Cancelled</span> : <details className="slot-cancel"><summary>Cancel day</summary>
+            <ActionForm action={clinicAction.bind(null, 'cancel_schedule')} label="Cancel this day" className="form-stack">
+              <input type="hidden" name="id" value={item.id} />
+              <label>Reason shown to students<textarea name="explanation" required maxLength={1000} /></label>
+              <small>Every booking on this day is cancelled and the students see this reason. You can only cancel a day that hasn’t opened yet.</small>
+            </ActionForm></details>}
+        </div>;
+      })}</div> : <Empty>No days are open yet. Open a day above so students can book.</Empty>}
+    </section></>;
 }
 
 async function Appointments({ db }) {
@@ -251,7 +309,9 @@ async function Appointment({ db, role, id, filters }) {
     {role === 'student' && ['pending', 'confirmed'].includes(item.status) && <StatusForm id={id} status="cancelled" label="Cancel appointment" />}
     {role === 'student' && certificate?.status === 'released' && <Link className="button" href={'/clinic/certificate/' + id}>View medical certificate</Link>}
     {role === 'nurse' && item.status === 'pending' && <section className="paper form-stack"><h2>Review request</h2>
-      {await NurseCalendar({ db, filters, appointment: { id, urgency: urgencyLabels[item.urgency], reason: item.reason } })}<StatusForm id={id} status="denied" label="Deny appointment" denial />
+      {item.requested_start ? <><p>The student booked <strong>{clinicDate(item.requested_start)}</strong>. Confirm this time, or deny the request with a reason.</p>
+        <StatusForm id={id} status="confirmed" label="Confirm this time" /></>
+        : await NurseCalendar({ db, filters, appointment: { id, urgency: urgencyLabels[item.urgency], reason: item.reason } })}<StatusForm id={id} status="denied" label="Deny appointment" denial />
     </section>}
     {role === 'nurse' && item.status === 'confirmed' && <section className="paper form-stack"><h2>Visit arrival</h2>
       <StatusForm id={id} status="checked_in" label="Check in student" />

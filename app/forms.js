@@ -98,24 +98,20 @@ export function LoginForm({ signup = false, password = false, nurse = false, ema
   </form>;
 }
 
+const urgencies = [['urgent', 'As soon as possible'], ['soon', 'In the next few days'], ['flexible', 'I can wait']];
+
 export function BookingForm({ reasons, preview = false }) {
   const [state, dispatch, pending] = useActionState(preview ? async () => ({ message: 'Preview complete. This sample request has not been sent to the clinic.' }) : submitBooking, {});
   const [reason, setReason] = useState('');
-  return <form action={dispatch}>
+  return <form action={dispatch} className="booking-layout">
     <section className="paper form-stack">
-      <h2>Visit details</h2>
-      <label>How soon do you need a visit?
-        <select name="urgency" defaultValue="" required>
-          <option value="" disabled>Choose an urgency level</option>
-          <option value="urgent">As soon as possible</option>
-          <option value="soon">In the next few days</option>
-          <option value="flexible">I can wait</option>
-        </select>
-      </label>
-      <small>For emergencies, seek immediate help.</small>
-      <fieldset className="choice-grid"><legend>Reason for visit</legend>
-        {reasons.map((item) => <label key={item} className="choice"><input type="radio" name="reason" value={item}
-          checked={reason === item} onChange={() => setReason(item)} required />{item}</label>)}
+      <fieldset className="chip-field"><legend>How soon do you need a visit?</legend>
+        <div className="chips">{urgencies.map(([value, label]) => <label key={value} className="chip">
+          <input type="radio" name="urgency" value={value} required /><span>{label}</span></label>)}</div>
+      </fieldset>
+      <fieldset className="chip-field"><legend>Reason for visit</legend>
+        <div className="chips">{reasons.map((item) => <label key={item} className="chip"><input type="radio" name="reason" value={item}
+          checked={reason === item} onChange={() => setReason(item)} required /><span>{item}</span></label>)}</div>
       </fieldset>
       <label>Describe your concern<textarea name="concern" required maxLength={4000} rows={4} /></label>
       <label>Referral or excuse letter {reason === 'Medical certificate' ? '(required)' : '(optional)'}
@@ -126,6 +122,15 @@ export function BookingForm({ reasons, preview = false }) {
       <button disabled={pending}>{pending ? 'Booking…' : preview ? 'Preview request' : 'Request appointment'}</button>
       {state.message && <p role="status">{state.message}</p>}
     </section>
+    <aside className="paper next-steps" aria-label="What happens next">
+      <h2>What happens next</h2>
+      <ol>
+        <li>You send this request.</li>
+        <li>A nurse picks a date and time.</li>
+        <li>Your visit appears on Home and in My appointments.</li>
+      </ol>
+      <p className="alert-note">For emergencies, seek immediate help.</p>
+    </aside>
   </form>;
 }
 

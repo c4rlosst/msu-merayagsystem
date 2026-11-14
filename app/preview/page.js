@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { StudentDashboard } from '../../lib/student-dashboard.js';
 import { AppointmentList } from '../../lib/appointment-list.js';
 import { ScheduleCalendar } from '../schedule-calendar.js';
-import { addDays, addMonths, isDateKey, manilaDate, monthStart, toMs } from '../../lib/manila.js';
+import { addDays, addMonths, isDateKey, manilaDate, monthStart, toMs, weekday } from '../../lib/manila.js';
 
 // Sample visits around today (Manila time) so the nurse calendar can be tried without signing in.
 function sampleVisits(today) {
@@ -27,6 +27,19 @@ function sampleAppointments(today) {
     { id: 'a3', reference_number: 'MRY-0988', reason: 'Medical certificate', status: 'completed', requested_start: at(-12, 14 * 60 + 30) },
     { id: 'a4', reference_number: 'MRY-0951', reason: 'General check-up', status: 'denied', requested_start: null }
   ];
+}
+
+// Sample open times (weekdays, 8:00 to 11:30, every half hour) for the student booking preview.
+function sampleSlots(today) {
+  const slots = [];
+  for (let offset = 1; offset <= 20; offset++) {
+    const day = addDays(today, offset);
+    if ([0, 6].includes(weekday(day))) continue;
+    for (let minutes = 8 * 60, index = 0; minutes < 12 * 60; minutes += 30, index++) {
+      slots.push({ id: 'slot-' + day + '-' + minutes, start: toMs(day, minutes), end: toMs(day, minutes + 30), left: 1 + ((offset + index) % 3) });
+    }
+  }
+  return slots;
 }
 
 export const dynamic = 'force-dynamic';
@@ -52,7 +65,7 @@ export default async function DashboardPreview({ searchParams }) {
       <div key={page} className="menu-content">
       {page==='home' && <StudentDashboard appointments={appointments} name="Maria Santos" released={1} preview/>}
       {page==='appointments' && <AppointmentList appointments={appointments} preview/>}
-      {page==='book' && <PreviewBooking />}
+      {page==='book' && <PreviewBooking slots={query.empty ? [] : sampleSlots(today)} />}
       {page==='schedule' && <>
         <header className="page-heading"><h1>Review request</h1><p>Sample visits. Nothing here is saved.</p></header>
         <section className="paper form-stack"><h2>Review request</h2>
