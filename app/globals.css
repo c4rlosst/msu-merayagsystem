@@ -166,7 +166,7 @@ th,td{padding:.7rem;vertical-align:top;border-bottom:1px solid var(--line)}
 .auth-brand-content { text-align: center; }
 .auth-artwork {
   display: block;
-  width: 11rem;
+  width: 8.5rem;
   max-width: 100%;
   height: auto;
   margin-inline: auto;
@@ -226,7 +226,7 @@ th,td{padding:.7rem;vertical-align:top;border-bottom:1px solid var(--line)}
   .auth-split { grid-template-columns: 1fr; grid-template-areas: "brand" "form"; grid-template-rows: auto 1fr; }
   .auth-brand { padding: 1.5rem; }
   .auth-brand-content { display: grid; grid-template-columns: 4rem minmax(0, 1fr); align-items: center; gap: .2rem 1rem; text-align: left; }
-  .auth-artwork { grid-row: 1 / 3; width: 3.5rem; filter: none; }
+  .auth-artwork { grid-row: 1 / 3; width: 3.25rem; filter: none; }
   .auth-name { margin: 0; font-size: 1.55rem; align-self: end; }
   .auth-caption { font-size: .85rem; align-self: start; }
   .auth-form-area { padding: 2rem 1.25rem 3rem; align-items: start; }

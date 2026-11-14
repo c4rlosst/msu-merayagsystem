@@ -16,10 +16,22 @@
   justify-content: center;
   align-items: center;
   padding: 20px;
+  /* Shown before the shader loads, and kept if WebGL isn't available. */
   background: linear-gradient(135deg, var(--maroon) 0%, var(--deep) 100%);
+  position: relative;
+  isolation: isolate;
+}
+
+/* Animated mesh gradient behind the card (see mesh-gradient.tsx). */
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .card {
+  z-index: 1;
   position: relative;
   width: 100%;
   max-width: 960px;
@@ -171,6 +183,63 @@
   box-shadow: 0 0 0 2px var(--maroon);
 }
 
+/* Username box + fixed school domain, drawn as one pill with one focus ring. */
+.pane :global(.email-group) {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding-right: 1.25rem;
+  border-radius: 3rem;
+  background: #f0f0f0;
+  font-weight: 400;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.pane :global(.email-group):focus-within {
+  background: #e8e8e8;
+  box-shadow: 0 0 0 2px var(--maroon);
+}
+
+/* The input sits in a grid cell sized by a hidden copy of its text, so the domain
+   appears right after the username; with no domain shown it fills the whole pill. */
+.pane :global(.email-sizer) {
+  display: inline-grid;
+  flex: 1 1 auto;
+  min-width: 2.5rem;
+}
+
+.pane :global(.email-group)[data-domain="true"] :global(.email-sizer) {
+  flex: 0 1 auto;
+}
+
+.pane :global(.email-sizer)::after {
+  content: attr(data-value) " ";
+  grid-area: 1 / 1;
+  visibility: hidden;
+  white-space: pre;
+  padding: 0 0.25rem 0 1.25rem;
+  font-size: 1rem;
+}
+
+.pane :global(.email-group) input:not([type="hidden"]),
+.pane :global(.email-group) input:not([type="hidden"]):focus-visible {
+  grid-area: 1 / 1;
+  width: 0; /* no built-in input width: the cell is sized by the hidden text copy... */
+  min-width: 100%; /* ...and the input stretches to fill it */
+  padding-right: 0.25rem;
+  border-radius: 3rem 0 0 3rem;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.pane :global(.email-domain) {
+  flex: none;
+  font-size: 1rem;
+  white-space: nowrap;
+  color: var(--muted);
+}
+
 .pane form button {
   width: 100%;
   min-height: 3rem;
@@ -185,6 +254,59 @@
 .pane form button:hover:not(:disabled) {
   background: var(--deep);
   box-shadow: 0 5px 15px rgba(129, 13, 53, 0.4);
+}
+
+/* "Continue with Google": the way students sign in and sign up. */
+.googleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 3rem;
+  padding: 0 1.25rem;
+  border: 1.5px solid #d9d2d6;
+  border-radius: 3rem;
+  background: #fff;
+  color: #2b2228;
+  font-family: var(--font-text);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+.googleButton:hover {
+  background: #faf6f8;
+  box-shadow: 0 4px 12px rgba(81, 9, 31, 0.12);
+  transform: translateY(-1px);
+}
+
+.googleButton svg {
+  flex: none;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e7dde3;
+}
+
+.note {
+  margin: 0.9rem 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--muted);
 }
 
 .pane form a,
@@ -271,7 +393,7 @@
 
 .logo {
   display: block;
-  width: 6.75rem;
+  width: 6.5rem;
   height: auto;
   margin: 0 auto;
   filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.28));
@@ -385,7 +507,7 @@
 
   .logo {
     grid-row: 1 / 4;
-    width: 3.5rem;
+    width: 3.25rem;
     filter: none;
   }
 
