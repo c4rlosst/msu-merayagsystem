@@ -240,6 +240,52 @@
   color: var(--muted);
 }
 
+/* Password box with a show/hide eye button, drawn as one pill like the email field. */
+.pane :global(.password-group) {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding-right: 0.35rem;
+  border-radius: 3rem;
+  background: #f0f0f0;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.pane :global(.password-group):focus-within {
+  background: #e8e8e8;
+  box-shadow: 0 0 0 2px var(--maroon);
+}
+
+.pane :global(.password-group) input:not([type="hidden"]),
+.pane :global(.password-group) input:not([type="hidden"]):focus-visible {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 0.5rem;
+  border-radius: 3rem 0 0 3rem;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+}
+
+.pane form button:global(.password-toggle),
+.pane form button:global(.password-toggle):hover:not(:disabled) {
+  flex: none;
+  width: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+  transform: none;
+}
+
+.pane form button:global(.password-toggle):hover:not(:disabled),
+.pane form button:global(.password-toggle)[aria-pressed="true"] {
+  background: rgba(81, 9, 31, 0.08);
+  color: var(--maroon);
+}
+
 .pane form button {
   width: 100%;
   min-height: 3rem;

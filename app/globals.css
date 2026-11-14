@@ -205,6 +205,27 @@ th,td{padding:.7rem;vertical-align:top;border-bottom:1px solid var(--line)}
   color: white;
 }
 .auth-form-content button:hover { background: var(--auth-deep); }
+/* Show/hide eye button sitting inside the password field. */
+.auth-form-content .password-group { position: relative; display: flex; align-items: center; }
+.auth-form-content .password-group input { padding-right: 3.4rem; }
+.auth-form-content .password-group .password-toggle,
+.auth-form-content .password-group .password-toggle:hover:not(:disabled) {
+  position: absolute;
+  right: .5rem;
+  width: 2.6rem;
+  min-height: 2.6rem;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--auth-muted);
+  box-shadow: none;
+  transform: none;
+}
+.auth-form-content .password-group .password-toggle:hover:not(:disabled),
+.auth-form-content .password-group .password-toggle[aria-pressed="true"] {
+  background: #efe6ea;
+  color: var(--auth-maroon);
+}
 .auth-form-content a { color: var(--auth-maroon); font-weight: 650; }
 .auth-switch { margin-top: 2rem; text-align: center; padding-top: 1.5rem; border-top: 1px solid #e7dde3; }
 .auth-help { font-size: .88rem; text-align: center; margin: 1.4rem 0 0; }

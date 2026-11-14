@@ -1,7 +1,34 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState, useId, useState } from 'react';
 import { signIn, submitBooking } from './actions.js';
+
+// A password input with an eye button that shows or hides what was typed.
+function PasswordField({ label, hint, ...inputProps }) {
+  const [shown, setShown] = useState(false);
+  const labelId = useId();
+  return <label>
+    <span id={labelId}>{label}</span>
+    <span className="password-group">
+      <input {...inputProps} type={shown ? 'text' : 'password'} aria-labelledby={labelId}
+        autoCapitalize="none" spellCheck={false} required />
+      <button type="button" className="password-toggle" aria-pressed={shown}
+        aria-label={shown ? 'Hide password' : 'Show password'} title={shown ? 'Hide password' : 'Show password'}
+        onMouseDown={(event) => event.preventDefault()} /* keep the cursor in the field */
+        onClick={() => setShown((value) => !value)}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          {shown
+            ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" /><path d="m1 1 22 22" /></>
+            : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>}
+        </svg>
+      </button>
+    </span>
+    {hint}
+  </label>;
+}
 
 export function ActionForm({ action, children, label, className }) {
   const [state, dispatch, pending] = useActionState(action, {});
@@ -57,12 +84,11 @@ export function LoginForm({ signup = false, password = false, nurse = false, ema
       </label> :
       <label>School email<input type="email" name="email" autoComplete="email" required
         key={state.email ?? 'email'} defaultValue={state.email} readOnly={Boolean(state.email)} /></label>}
-    {password && <label>Clinic account password<input type="password" name="password" autoComplete="current-password" maxLength={1024} required /></label>}
+    {password && <PasswordField label="Clinic account password" name="password" autoComplete="current-password" maxLength={1024} />}
     {signup && !state.email && <>
       <input type="hidden" name="create_account" value="yes" />
-      <label>Create a clinic password<input type="password" name="password" autoComplete="new-password" minLength={6} maxLength={72} required />
-        <small>Use at least 6 characters.</small>
-      </label>
+      <PasswordField label="Create a clinic password" name="password" autoComplete="new-password" minLength={6} maxLength={72}
+        hint={<small>Use at least 6 characters.</small>} />
     </>}
     {state.email && <label>Email code<input name="code" inputMode="numeric" autoComplete="one-time-code" required /></label>}
     {state.message && <p role="status">{state.message}</p>}
