@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { requireRole } from '../../../lib/session.js';
 import { clinicDate, reasons, statuses, urgencyLabels } from '../../../lib/clinic.js';
 import { AppointmentList } from '../../../lib/appointment-list.js';
-import { StudentDashboard } from '../../../lib/student-dashboard.js';
+import { StudentDashboard, VisitDate } from '../../../lib/student-dashboard.js';
 import { clinicAction, createNurseAccount, manageStaffAccess } from '../../actions.js';
 import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
 
@@ -129,10 +129,17 @@ async function Appointments({ db }) {
   return <AppointmentList appointments={appointments} />;
 }
 
+const urgencyShort = { urgent: 'ASAP', soon: 'Soon', flexible: 'Flexible' };
+const timeOf = (value) => clinicDate(value, { hour: 'numeric', minute: '2-digit' }).toUpperCase();
+// A group of visit rows sits on one surface, separated by rules, instead of one box per row.
+function Rows({ children }) { return <div className="paper list">{children}</div>; }
+
 function AppointmentRow({ appointment }) {
   return <Link className="visit-row" href={appointmentLink(appointment.id)}>
-    <time dateTime={appointment.requested_start}>{appointment.requested_start ? clinicDate(appointment.requested_start) : urgencyLabels[appointment.urgency]}</time>
-    <span><strong>{appointment.reason}</strong><small>{appointment.reference_number}</small></span>
+    <VisitDate value={appointment.requested_start} fallback={urgencyShort[appointment.urgency]} />
+    <span className="visit-what"><strong>{appointment.reason}</strong>
+      <span className="visit-sub"><span>{appointment.requested_start ? timeOf(appointment.requested_start) : urgencyLabels[appointment.urgency]}</span>
+        <span>{appointment.reference_number}</span></span></span>
     <Badge status={appointment.status} />
   </Link>;
 }
@@ -148,9 +155,9 @@ async function NurseDesk({ db }) {
   const earlierVisits = visits.filter((visit) => Date.parse(visit.requested_start) < Date.now() && !todaysVisits.includes(visit));
   return <><Heading title="Clinic desk">Review pending requests and schedule visits on the clinic calendar.</Heading>
     <nav className="section-nav" aria-label="Clinic desk"><Link href="/clinic/calendar">Appointment calendar</Link><Link href="/clinic/releases">Certificate releases</Link></nav>
-    <section><h2>Pending requests</h2>{requests.length ? requests.map((a) => <AppointmentRow key={a.id} appointment={a} />) : <Empty>New student requests will appear here.</Empty>}</section>
-    <section><h2>Today’s visits</h2>{todaysVisits.length ? todaysVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />) : <Empty>No confirmed or checked-in visits today.</Empty>}</section>
-    {earlierVisits.length > 0 && <section><h2>Earlier visits to close</h2>{earlierVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</section>}
+    <section><h2>Pending requests</h2>{requests.length ? <Rows>{requests.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</Rows> : <Empty>New student requests will appear here.</Empty>}</section>
+    <section><h2>Today’s visits</h2>{todaysVisits.length ? <Rows>{todaysVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</Rows> : <Empty>No confirmed or checked-in visits today.</Empty>}</section>
+    {earlierVisits.length > 0 && <section><h2>Earlier visits to close</h2><Rows>{earlierVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</Rows></section>}
   </>;
 }
 
@@ -192,10 +199,11 @@ function ClinicalSummary({ record }) {
 async function PhysicianQueue({ db }) {
   const records = checked(await db.rpc('list_clinic_certificate_queue'));
   return <><Heading title="Certificates awaiting authorization">Review completed medical certificate visits before authorizing release.</Heading>
-    {records.length ? records.map((item) => <Link className="visit-row" key={item.appointment_id} href={appointmentLink(item.appointment_id)}>
-      <time>{item.visit_date}</time><span><strong>{item.full_name}</strong><small>{item.reference_number}</small></span>
+    {records.length ? <Rows>{records.map((item) => <Link className="visit-row" key={item.appointment_id} href={appointmentLink(item.appointment_id)}>
+      <VisitDate value={item.visit_date} />
+      <span className="visit-what"><strong>{item.full_name}</strong><span className="visit-sub"><span>{item.reference_number}</span></span></span>
       <Badge status="awaiting_authorization" />
-    </Link>) : <Empty>Completed medical certificate visits will appear here.</Empty>}</>;
+    </Link>)}</Rows> : <Empty>Completed medical certificate visits will appear here.</Empty>}</>;
 }
 
 async function Appointment({ db, role, id, filters }) {
@@ -314,11 +322,11 @@ async function ReleaseQueue({ db }) {
     .select('appointment_id, status, student_name, appointments(reference_number, requested_start)')
     .in('status', ['authorized', 'released']).order('authorized_at', { ascending: false }).limit(100));
   return <><Heading title="Certificate releases">Open an authorized certificate to record who received it.</Heading>
-    {certificates.length ? certificates.map((item) => <Link className="visit-row" key={item.appointment_id} href={appointmentLink(item.appointment_id)}>
-      <time>{clinicDate(item.appointments.requested_start)}</time>
-      <span><strong>{item.student_name}</strong><small>{item.appointments.reference_number}</small></span>
+    {certificates.length ? <Rows>{certificates.map((item) => <Link className="visit-row" key={item.appointment_id} href={appointmentLink(item.appointment_id)}>
+      <VisitDate value={item.appointments.requested_start} />
+      <span className="visit-what"><strong>{item.student_name}</strong><span className="visit-sub"><span>{item.appointments.reference_number}</span></span></span>
       <Badge status={item.status} />
-    </Link>) : <Empty>Certificates will appear here after a physician authorizes them.</Empty>}</>;
+    </Link>)}</Rows> : <Empty>Certificates will appear here after a physician authorizes them.</Empty>}</>;
 }
 
 

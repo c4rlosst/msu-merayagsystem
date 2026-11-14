@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from '../actions.js';
@@ -20,16 +21,18 @@ export function ClinicShell({ role, email, children }) {
   return <div className="clinic-shell">
     <a href="#clinic-content" className="skip-link">Skip to content</a>
     <aside className="sidebar no-print">
-      <Link href="/clinic" className="brand"><span aria-hidden="true">✚</span> MERAYAG</Link>
-      <p className="role-label">{roleNames[role]} portal</p>
+      <Link href="/clinic" className="brand">
+        <Image src="/merayag-phoenix-panel.png" alt="" width={689} height={1000} sizes="48px" className="brand-mark" priority />
+        <span><b>MERAYAG</b><small>{roleNames[role]} portal</small></span>
+      </Link>
       <nav aria-label="Clinic">{links[role].map(([href, label]) =>
         <Link key={href} href={href} aria-current={href === current ? 'page' : undefined}>{label}</Link>
       )}</nav>
-      <form action={signOut}><button className="quiet">Sign out</button></form>
+      <div className="sidebar-foot">
+        <span title={email}>{email}</span>
+        <form action={signOut}><button className="quiet">Sign out</button></form>
+      </div>
     </aside>
-    <main id="clinic-content" className="workspace">
-      <div className="account no-print">{email}</div>
-      {children}
-    </main>
+    <main id="clinic-content" className="workspace">{children}</main>
   </div>;
 }

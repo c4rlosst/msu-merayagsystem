@@ -1,5 +1,6 @@
 import { PreviewBooking } from './booking.js';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { StudentDashboard } from '../../lib/student-dashboard.js';
 import { AppointmentList } from '../../lib/appointment-list.js';
@@ -17,6 +18,17 @@ function sampleVisits(today) {
     visit(2, 840, 900, 'Medical certificate', 5), visit(4, 540, 600, 'Medical consultation', 6)];
 }
 
+// Sample student visits for the home and appointments previews (add ?empty=1 to see the empty state).
+function sampleAppointments(today) {
+  const at = (offset, minutes) => new Date(toMs(addDays(today, offset), minutes)).toISOString();
+  return [
+    { id: 'a1', reference_number: 'MRY-1042', reason: 'Medical consultation', status: 'confirmed', requested_start: at(2, 9 * 60) },
+    { id: 'a2', reference_number: 'MRY-1039', reason: 'Vital signs check', status: 'pending', requested_start: null },
+    { id: 'a3', reference_number: 'MRY-0988', reason: 'Medical certificate', status: 'completed', requested_start: at(-12, 14 * 60 + 30) },
+    { id: 'a4', reference_number: 'MRY-0951', reason: 'General check-up', status: 'denied', requested_start: null }
+  ];
+}
+
 export const dynamic = 'force-dynamic';
 export default async function DashboardPreview({ searchParams }) {
   if (process.env.NODE_ENV !== 'development') notFound();
@@ -25,16 +37,21 @@ export default async function DashboardPreview({ searchParams }) {
   if (!['home','book','appointments','profile','schedule'].includes(page)) notFound();
   const today = manilaDate(Date.now());
   const date = isDateKey(query.date) ? query.date : today;
+  const appointments = query.empty ? [] : sampleAppointments(today);
   return <div className="clinic-shell">
     <aside className="sidebar">
-      <Link href="/preview" className="brand">MERAYAG</Link><p className="role-label">Student portal</p>
+      <Link href="/preview" className="brand">
+        <Image src="/merayag-phoenix-panel.png" alt="" width={689} height={1000} sizes="48px" className="brand-mark" priority />
+        <span><b>MERAYAG</b><small>Student portal</small></span>
+      </Link>
       <nav aria-label="Clinic">{[['home','Home'],['book','Book'],['appointments','My appointments'],['profile','My profile'],['schedule','Nurse schedule']].map(([key,label]) =>
         <Link key={key} href={'/preview?page='+key} aria-current={page===key?'page':undefined}>{label}</Link>)}</nav>
+      <div className="sidebar-foot"><span>student@school.example</span><button className="quiet" type="button">Sign out</button></div>
     </aside>
-    <main className="workspace"><p className="account">Student preview · Sample data</p>
+    <main className="workspace">
       <div key={page} className="menu-content">
-      {page==='home' && <StudentDashboard appointments={[]} name="Student" preview/>}
-      {page==='appointments' && <AppointmentList appointments={[]} preview/>}
+      {page==='home' && <StudentDashboard appointments={appointments} name="Maria Santos" released={1} preview/>}
+      {page==='appointments' && <AppointmentList appointments={appointments} preview/>}
       {page==='book' && <PreviewBooking />}
       {page==='schedule' && <>
         <header className="page-heading"><h1>Review request</h1><p>Sample visits. Nothing here is saved.</p></header>
