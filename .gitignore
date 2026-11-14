@@ -2,5 +2,7 @@
 !.env.example
 node_modules/
 .next/
+next-env.d.ts
+*.tsbuildinfo
 supabase/.temp/
 supabase/.branches/

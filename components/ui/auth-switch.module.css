@@ -1,0 +1,442 @@
+/* Scoped to AuthSwitch via CSS Modules: nothing here can leak into the rest of the app,
+   and the app's global button/input/label rules are overridden only inside the card. */
+
+.root {
+  --maroon: #810d35;
+  --deep: #51091f;
+  --muted: #625463;
+  /* SF Pro where it exists (installed, or macOS/iOS via -apple-system); system font elsewhere.
+     The font files are not bundled: Apple's licence doesn't allow shipping SF Pro on a website. */
+  --font-text: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-family: var(--font-text);
+  min-height: 100svh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--maroon) 0%, var(--deep) 100%);
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 960px;
+  height: 680px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  /* `clip` also forbids programmatic scrolling, so focusing or scrolling a field into view
+     can never drag the off-screen sliding layers into the card. */
+  overflow: clip;
+}
+
+/* The big sweeping circle that moves between halves. */
+.card::before {
+  content: "";
+  position: absolute;
+  height: 2000px;
+  width: 2000px;
+  top: 50%;
+  right: 48%;
+  transform: translateY(-50%);
+  background: linear-gradient(-45deg, var(--maroon) 0%, var(--deep) 100%);
+  border-radius: 50%;
+  transition: 1.8s ease-in-out;
+  z-index: 6;
+}
+
+.card.signUpMode::before {
+  transform: translate(100%, -50%);
+  right: 52%;
+}
+
+/* ---------- Forms ---------- */
+
+.formsContainer {
+  position: absolute;
+  inset: 0;
+}
+
+.track {
+  position: absolute;
+  top: 50%;
+  left: 75%;
+  width: 50%;
+  max-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transform: translate(-50%, -50%);
+  transition: 1s 0.7s ease-in-out;
+  display: grid;
+  grid-template-columns: 1fr;
+  z-index: 5;
+}
+
+.signUpMode .track {
+  left: 25%;
+}
+
+.pane {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 1.5rem clamp(1.5rem, 4vw, 3.5rem);
+  transition: opacity 0.2s 0.7s;
+}
+
+.pane > * {
+  width: 100%;
+  max-width: 22rem;
+}
+
+.signInPane {
+  z-index: 2;
+}
+
+.signUpPane {
+  opacity: 0;
+  z-index: 1;
+}
+
+.signUpMode .signInPane {
+  opacity: 0;
+  z-index: 1;
+}
+
+.signUpMode .signUpPane {
+  opacity: 1;
+  z-index: 2;
+}
+
+.eyebrow {
+  margin: 0 0 0.6rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.title {
+  margin: 0 0 0.3rem;
+  font-family: var(--font-display);
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--deep);
+}
+
+.lead {
+  margin: 0 0 1.3rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.pane > :global(.error) {
+  margin: 0 0 0.9rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.pane form {
+  gap: 0.8rem;
+}
+
+.pane label {
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: #444;
+}
+
+.pane form input:not([type="hidden"]) {
+  min-height: 3rem;
+  border: 0;
+  border-radius: 3rem;
+  padding: 0 1.25rem;
+  background: #f0f0f0;
+  font-size: 1rem;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.pane form input:not([type="hidden"]):focus-visible {
+  outline: none;
+  background: #e8e8e8;
+  box-shadow: 0 0 0 2px var(--maroon);
+}
+
+.pane form button {
+  width: 100%;
+  min-height: 3rem;
+  border-radius: 3rem;
+  background: var(--maroon);
+  color: #fff;
+  font-family: var(--font-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pane form button:hover:not(:disabled) {
+  background: var(--deep);
+  box-shadow: 0 5px 15px rgba(129, 13, 53, 0.4);
+}
+
+.pane form a,
+.footer a {
+  color: var(--maroon);
+  font-size: 0.9rem;
+  font-weight: 650;
+  text-align: center;
+}
+
+.pane form small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.pane form p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.footer {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.help {
+  margin: 0.9rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* ---------- Sliding panels ---------- */
+
+.panels {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 2.5rem;
+  text-align: center;
+  z-index: 6;
+}
+
+.leftPanel {
+  pointer-events: all;
+}
+
+.rightPanel {
+  pointer-events: none;
+}
+
+.panelContent {
+  max-width: 17rem;
+  color: #fff;
+  transition: transform 0.9s ease-in-out 0.6s;
+}
+
+.rightPanel .panelContent {
+  transform: translateX(800px);
+}
+
+.signUpMode .leftPanel {
+  pointer-events: none;
+}
+
+.signUpMode .rightPanel {
+  pointer-events: all;
+}
+
+.signUpMode .leftPanel .panelContent {
+  transform: translateX(-800px);
+}
+
+.signUpMode .rightPanel .panelContent {
+  transform: translateX(0);
+}
+
+.logo {
+  display: block;
+  width: 6.75rem;
+  height: auto;
+  margin: 0 auto;
+  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.28));
+}
+
+.panelContent h2 {
+  font-family: var(--font-display);
+  margin: 1.1rem 0 0.2rem;
+  font-size: 1.5rem;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.panelContent p {
+  margin: 0.3rem 0 1.2rem;
+  max-width: none;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.ghostButton {
+  min-width: 9rem;
+  min-height: 2.75rem;
+  padding: 0 1.5rem;
+  border: 2px solid #fff;
+  border-radius: 3rem;
+  background: transparent;
+  color: #fff;
+  font-family: var(--font-text);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.ghostButton:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- Tablet / phone: stack panels above and below the form ---------- */
+
+@media (max-width: 870px) {
+  .root {
+    padding: 12px;
+  }
+
+  .card {
+    height: clamp(720px, calc(100svh - 24px), 820px);
+  }
+
+  .card::before {
+    width: 1500px;
+    height: 1500px;
+    top: auto;
+    right: auto;
+    left: 30%;
+    bottom: 68%;
+    transform: translateX(-50%);
+    transition: 2s ease-in-out;
+  }
+
+  .card.signUpMode::before {
+    transform: translate(-50%, 100%);
+    bottom: 32%;
+    right: auto;
+  }
+
+  .track,
+  .signUpMode .track {
+    left: 50%;
+    width: 100%;
+    top: 95%;
+    transform: translate(-50%, -100%);
+    transition: 1s 0.8s ease-in-out;
+  }
+
+  .signUpMode .track {
+    top: 5%;
+    transform: translate(-50%, 0);
+  }
+
+  .eyebrow {
+    display: none;
+  }
+
+  .panels {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 2fr 1fr;
+  }
+
+  .panel {
+    grid-column: 1 / 2;
+    padding: 1.25rem 8%;
+  }
+
+  .leftPanel {
+    grid-row: 1 / 2;
+  }
+
+  .rightPanel {
+    grid-row: 3 / 4;
+  }
+
+  .panelContent {
+    display: grid;
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+    align-items: center;
+    gap: 0.1rem 1rem;
+    max-width: 24rem;
+    text-align: left;
+    transition: transform 0.9s ease-in-out 0.8s;
+  }
+
+  .logo {
+    grid-row: 1 / 4;
+    width: 3.5rem;
+    filter: none;
+  }
+
+  .panelContent h2 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  .panelContent p {
+    margin: 0;
+    font-size: 0.8rem;
+  }
+
+  .ghostButton {
+    justify-self: start;
+    min-width: 0;
+    min-height: 2.25rem;
+    margin-top: 0.4rem;
+    padding: 0 1.1rem;
+    font-size: 0.85rem;
+  }
+
+  .rightPanel .panelContent {
+    transform: translateY(300px);
+  }
+
+  .signUpMode .leftPanel .panelContent {
+    transform: translateY(-300px);
+  }
+
+  .signUpMode .rightPanel .panelContent {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 570px) {
+  .pane {
+    padding: 1rem 1.5rem;
+  }
+
+  .panelContent {
+    padding: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card::before,
+  .track,
+  .pane,
+  .panelContent {
+    transition-duration: 0.01ms;
+    transition-delay: 0s;
+  }
+}
