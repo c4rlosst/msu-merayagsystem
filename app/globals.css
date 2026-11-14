@@ -747,17 +747,12 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 /* Hero and next-visit card pick up the red */
 .workspace .hero{background:linear-gradient(120deg,#7d1568 0%,#6b0f55 48%,#a8143c 100%)}
 .next-card{background:linear-gradient(150deg,#8c1038,#2e0814)}
-.student-shell .workspace .button:not(.gold):not(.quiet){background:var(--red)}
-.student-shell .workspace .button:not(.gold):not(.quiet):hover{background:var(--red-dark)}
 .workspace .panel-head a{color:var(--red)}
 
 /* Action buttons: tinted icon chips, a lift on hover, and one red primary */
 .workspace .actions a{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background-color .18s ease}
 .workspace .actions a:hover{transform:translateY(-2px);border-color:#ebd3de;background:#fff;box-shadow:0 8px 18px #2a1c2217}
 .workspace .actions a:hover .tile-icon{background:var(--chip,var(--tint))}
-.workspace .actions a.tone-primary{border-color:var(--red);background:var(--red);color:#fff;box-shadow:0 6px 14px #c0183c40}
-.workspace .actions a.tone-primary:hover{border-color:var(--red-dark);background:var(--red-dark);box-shadow:0 10px 20px #c0183c55}
-.workspace .actions a.tone-primary .tile-icon,.workspace .actions a.tone-primary:hover .tile-icon{background:#ffffff2e;color:#fff}
 
 /* Visit rows: the date block takes the status colour, a small arrow shows the row opens */
 .workspace .visit-row:first-child{border-top:0}
@@ -780,4 +775,47 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .notice:hover{background:#fbf5f8}
 .workspace .admin-table button{color:var(--red-dark)}
 .workspace .admin-table button:hover:not(:disabled){background:#fde4e8}
-.workspace .status-filters button[aria-pressed=true]{border-color:var(--red);background:var(--red)}
+
+/* Phones: the menu scrolls sideways, so each link keeps its full width instead of squeezing together */
+@media (max-width:860px){
+  .student-shell .sidebar nav a,.sidebar nav a{flex:none;min-width:auto}
+  .student-shell .sidebar nav{scrollbar-width:none}
+}
+
+/* Phones: the student's photo moves up beside Sign Out so the header is two rows, not three */
+@media (max-width:860px){
+  .student-shell{position:relative}
+  .student-shell .topbar{position:absolute;top:.62rem;right:7.9rem;z-index:2;padding:0;border:0;background:transparent}
+  .student-shell .topbar .who{display:none}
+  .student-shell .topbar .avatar{width:2.4rem;height:2.4rem}
+  .student-shell .workspace{padding-top:1.1rem}
+}
+
+/* The red action is a white card with a red icon and a hint of red in its border, never a solid fill */
+.workspace .actions a.tone-red{border-color:#f1c2cb}
+.workspace .actions a.tone-red:hover{border-color:#e58fa0;box-shadow:0 8px 18px #c0183c24}
+.workspace .actions a{color:var(--wine)}
+.student-shell .workspace .actions a{color:#3a1030}
+
+/* Phones: three quick actions stay in one row */
+@media (max-width:420px){
+  .actions{padding-inline:.9rem;gap:.5rem}
+  .actions.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .workspace .actions a{min-height:5rem;padding:.7rem .2rem;font-size:.78rem}
+}
+
+/* Phones: each staff member becomes a small card instead of a table that scrolls sideways */
+@media (max-width:700px){
+  .admin-table thead{display:none}
+  .admin-table,.admin-table tbody{display:block}
+  .admin-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"who act" "role access" "last last";gap:.35rem .8rem;align-items:center;padding:.9rem 1.1rem;border-top:1px solid #f0e8ec}
+  .admin-table tbody tr:first-child{border-top:0}
+  .admin-table td,.admin-table td:first-child,.admin-table td:last-child{display:block;padding:0;border:0;text-align:left}
+  .admin-table td:nth-child(1){grid-area:who;overflow-wrap:anywhere}
+  .admin-table td:nth-child(2){grid-area:role;color:var(--mute);font-size:.9rem}
+  .admin-table td:nth-child(3){grid-area:access;justify-self:end}
+  .admin-table td:nth-child(4){grid-area:last;font-size:.85rem;color:var(--mute)}
+  .admin-table td:nth-child(4)::before{content:"Last sign-in: "}
+  .admin-table td:nth-child(5){grid-area:act;justify-self:end}
+  .admin-table tbody tr:hover{background:transparent}
+}
