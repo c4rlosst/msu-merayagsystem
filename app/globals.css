@@ -730,3 +730,54 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .student-shell .sidebar nav{grid-template-columns:minmax(0,1fr)}
 .student-shell .sidebar nav a{min-width:0;gap:.55rem;padding:.6rem .6rem;font-size:.9rem}
 @media (max-width:860px){.student-shell .sidebar nav{grid-template-columns:none}}
+
+/* ===================== Red, tones and nicer rows =====================
+   The brand's red joins the plum and gold: the main action, the hero's far corner, anything that
+   needs attention or didn't go ahead. Each small icon or date block takes a tone. */
+:root{--red:#c0183c;--red-dark:#9d1232}
+.tone-plum{--chip:#f3e0ec;--chip-ink:#750a5a}
+.tone-gold{--chip:#fff3d1;--chip-ink:#8a5a00}
+.tone-red{--chip:#fde4e8;--chip-ink:#b3123a}
+.tone-green{--chip:#e1f0e7;--chip-ink:#1d6a45}
+.tone-blue{--chip:#e3edf8;--chip-ink:#1f4f82}
+.tile-icon{background:var(--chip,var(--tint));color:var(--chip-ink,var(--maroon))}
+.tile.is-zero .tile-icon{background:#f1eef0;color:#a99ca2}
+.tile.is-alert dd{color:var(--red)}
+
+/* Hero and next-visit card pick up the red */
+.workspace .hero{background:linear-gradient(120deg,#7d1568 0%,#6b0f55 48%,#a8143c 100%)}
+.next-card{background:linear-gradient(150deg,#8c1038,#2e0814)}
+.student-shell .workspace .button:not(.gold):not(.quiet){background:var(--red)}
+.student-shell .workspace .button:not(.gold):not(.quiet):hover{background:var(--red-dark)}
+.workspace .panel-head a{color:var(--red)}
+
+/* Action buttons: tinted icon chips, a lift on hover, and one red primary */
+.workspace .actions a{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background-color .18s ease}
+.workspace .actions a:hover{transform:translateY(-2px);border-color:#ebd3de;background:#fff;box-shadow:0 8px 18px #2a1c2217}
+.workspace .actions a:hover .tile-icon{background:var(--chip,var(--tint))}
+.workspace .actions a.tone-primary{border-color:var(--red);background:var(--red);color:#fff;box-shadow:0 6px 14px #c0183c40}
+.workspace .actions a.tone-primary:hover{border-color:var(--red-dark);background:var(--red-dark);box-shadow:0 10px 20px #c0183c55}
+.workspace .actions a.tone-primary .tile-icon,.workspace .actions a.tone-primary:hover .tile-icon{background:#ffffff2e;color:#fff}
+
+/* Visit rows: the date block takes the status colour, a small arrow shows the row opens */
+.workspace .visit-row:first-child{border-top:0}
+.visit-date{width:3.6rem;padding:.4rem 0;border-radius:.8rem;background:var(--chip,var(--tint));color:var(--chip-ink,var(--maroon))}
+.visit-date.is-open{background:var(--chip);color:var(--chip-ink)}
+.visit-end{display:flex;align-items:center;gap:.5rem}
+.visit-arrow{color:#cbbcc4;transition:transform .18s ease,color .18s ease}
+.workspace a.visit-row:hover .visit-arrow{color:var(--red);transform:translateX(3px)}
+.workspace .panel a.visit-row:hover,.workspace .panel div.visit-row:hover{background:#fbf5f8}
+.workspace .panel .rows{padding:0 .6rem .7rem}
+.workspace .panel .visit-row{border-top-color:#f0e8ec}
+.workspace .panel a.visit-row,.workspace .panel div.visit-row{grid-template-columns:3.6rem minmax(0,1fr) auto;padding-block:.8rem}
+@media (max-width:860px){
+  .visit-end .badge{grid-column:auto}
+  .workspace .panel .visit-row .visit-end{grid-column:2}
+}
+
+/* Notices, revoke and urgent bits use the red too */
+.notice{border-radius:.9rem}
+.notice:hover{background:#fbf5f8}
+.workspace .admin-table button{color:var(--red-dark)}
+.workspace .admin-table button:hover:not(:disabled){background:#fde4e8}
+.workspace .status-filters button[aria-pressed=true]{border-color:var(--red);background:var(--red)}
