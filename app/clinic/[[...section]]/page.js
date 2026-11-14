@@ -6,13 +6,14 @@ import { requireRole } from '../../../lib/session.js';
 import { clinicDate, reasons, statuses, urgencyLabels } from '../../../lib/clinic.js';
 import { AppointmentList } from '../../../lib/appointment-list.js';
 import { StudentDashboard, VisitDate } from '../../../lib/student-dashboard.js';
-import { clinicAction, postAnnouncement, removeAnnouncement } from '../../actions.js';
+import { clinicAction } from '../../actions.js';
 import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
 import { SlotBooking } from '../../slot-booking.js';
 import { Badge, Empty, Heading, Rows } from '../../../lib/clinic-ui.js';
 import { NurseDeskView } from '../../../lib/nurse-desk.js';
 import { AdminDeskView } from '../../../lib/admin-desk.js';
 import { AccountView } from '../../../lib/account.js';
+import { AnnouncementsView } from '../../../lib/announcements-view.js';
 import { accountLabel } from '../../../lib/staff-id.js';
 import { manilaDate, timeLabel } from '../../../lib/manila.js';
 
@@ -152,22 +153,7 @@ async function Announcements({ db }) {
     .order('created_at', { ascending: false }).limit(50);
   if (error) return <><Heading title="Announcements">Post notices students see on their home screen.</Heading>
     <Empty>Announcements aren’t available yet. Apply the latest database update, then reload this page.</Empty></>;
-  return <><Heading title="Announcements">Post notices students see on their home screen, such as a closure or a schedule change.</Heading>
-    <ActionForm action={postAnnouncement} label="Post announcement" className="paper form-stack">
-      <h2>New announcement</h2>
-      <label>Title<input name="title" required maxLength={120} /></label>
-      <label>Message<textarea name="body" required maxLength={600} rows={3} /></label>
-      <label>Last day to show it (optional)<input type="date" name="until" />
-        <small>Leave this empty to keep it up until you remove it.</small></label>
-    </ActionForm>
-    <section><h2>Posted announcements</h2>
-      {data.length ? <div className="paper list">{data.map((notice) => <div className="notice-row" key={notice.id}>
-        <span className="visit-what"><strong>{notice.title}</strong><span>{notice.body}</span>
-          <span className="visit-sub"><span>Posted {clinicDate(notice.created_at, { dateStyle: 'medium' })}</span>
-            {notice.expires_at && <span>Shown until {clinicDate(Date.parse(notice.expires_at) - 1, { dateStyle: 'medium' })}</span>}</span></span>
-        <ActionForm action={removeAnnouncement} label="Remove" className="inline-form"><input type="hidden" name="id" value={notice.id} /></ActionForm>
-      </div>)}</div> : <Empty>No announcements yet.</Empty>}
-    </section></>;
+  return <AnnouncementsView notices={data} />;
 }
 
 async function Appointments({ db }) {

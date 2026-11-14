@@ -3,6 +3,7 @@
 import { useActionState, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { submitSlotBooking } from './actions.js';
+import { FileDrop } from './file-drop.js';
 import { WEEKDAYS, addMonths, dayLabel, daysInMonth, manilaDate, manilaMinutes, monthLabel, monthStart, timeLabel, weekday } from '../lib/manila.js';
 
 /**
@@ -73,10 +74,8 @@ export function SlotBooking({ slots, reasons, requestHref, preview = false }) {
           checked={reason === item} onChange={() => setReason(item)} required /><span>{item}</span></label>)}</div>
       </fieldset>
       <label>Describe your concern<textarea name="concern" required maxLength={4000} rows={4} /></label>
-      <label>Referral or excuse letter {reason === 'Medical certificate' ? '(required)' : '(optional)'}
-        <input type="file" name="letter" accept="image/jpeg,image/png,application/pdf" required={reason === 'Medical certificate'} />
-        <small>JPG, PNG, or PDF. Up to 5 MB.</small>
-      </label>
+      <FileDrop name="letter" accept="image/jpeg,image/png,application/pdf" required={reason === 'Medical certificate'}
+        label={'Referral or excuse letter ' + (reason === 'Medical certificate' ? '(required)' : '(optional)')} hint="JPG, PNG or PDF (max. 5 MB)" />
       <p className="slot-summary" role="status">{chosen
         ? dayLabel(day) + ' · ' + timeLabel(manilaMinutes(chosen.start)) + ' – ' + timeLabel(manilaMinutes(chosen.end))
         : 'Choose a day and time on the left.'}</p>

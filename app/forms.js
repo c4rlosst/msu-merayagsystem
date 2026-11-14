@@ -2,6 +2,7 @@
 
 import { useActionState, useId, useState } from 'react';
 import { signIn, submitBooking } from './actions.js';
+import { FileDrop } from './file-drop.js';
 
 // A password input with an eye button that shows or hides what was typed.
 export function PasswordField({ label, hint, ...inputProps }) {
@@ -116,10 +117,8 @@ export function BookingForm({ reasons, preview = false }) {
           checked={reason === item} onChange={() => setReason(item)} required /><span>{item}</span></label>)}</div>
       </fieldset>
       <label>Describe your concern<textarea name="concern" required maxLength={4000} rows={4} /></label>
-      <label>Referral or excuse letter {reason === 'Medical certificate' ? '(required)' : '(optional)'}
-        <input type="file" name="letter" accept="image/jpeg,image/png,application/pdf" required={reason === 'Medical certificate'} />
-        <small>JPG, PNG, or PDF. Up to 5 MB.</small>
-      </label>
+      <FileDrop name="letter" accept="image/jpeg,image/png,application/pdf" required={reason === 'Medical certificate'}
+        label={'Referral or excuse letter ' + (reason === 'Medical certificate' ? '(required)' : '(optional)')} hint="JPG, PNG or PDF (max. 5 MB)" />
       {state.error && <p className="error" role="alert">{state.error}</p>}
       <button className="submit" disabled={pending}>{pending ? 'Booking…' : preview ? 'Preview request' : 'Request appointment'}</button>
       {state.message && <p role="status">{state.message}</p>}

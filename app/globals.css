@@ -828,3 +828,51 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .row-reset[open] summary{background:var(--tint)}
 .row-reset form{display:grid;gap:.6rem;width:min(16rem,70vw);margin-top:.5rem;padding:.8rem;border:1px solid var(--rule);border-radius:.9rem;background:#fff;text-align:left}
 .workspace .row-actions .button.quiet{min-height:2.2rem;padding:.2rem .9rem;font-size:.85rem}
+
+/* Posted announcements (nurse screen) */
+.posts{display:grid;gap:.2rem;padding:0 .6rem .7rem}
+.post{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:start;gap:.9rem;padding:.9rem .75rem;border-top:1px solid #f0e8ec}
+.post:first-child{border-top:0}
+.post .tile-icon{width:2.4rem;height:2.4rem;grid-area:auto}
+.post-body strong{display:block;font-size:1rem}
+.workspace .post-body p{margin:.15rem 0 0;max-width:none;font-size:.92rem;overflow-wrap:anywhere}
+.workspace .post-body .post-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .8rem;margin-top:.5rem;font-size:.82rem}
+.workspace .post .inline-form button{min-height:2.2rem;padding:.2rem .9rem;border-color:#f1c2cb;background:#fff;color:var(--red-dark);font-size:.85rem}
+.workspace .post .inline-form button:hover:not(:disabled){background:#fde4e8}
+@media (max-width:560px){.post{grid-template-columns:auto minmax(0,1fr)}.post .inline-form{grid-column:2}}
+
+/* Wide screens: the dashboards use the whole width instead of leaving the right side empty */
+.clinic-shell:not(.student-shell) .workspace:has(.tiles,.desk,.split){max-width:none}
+.desk{grid-template-columns:minmax(0,1fr) clamp(21rem,25vw,28rem)}
+.actions.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.split>.next-card{align-self:stretch;align-content:center}
+.split>.panel{align-self:stretch}
+@media (max-width:1080px){.desk{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:560px){.actions.cols-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* File drop box (referral or excuse letter) */
+.drop-field{display:grid;gap:.6rem}
+.workspace .drop-label{font-size:.9rem;font-weight:700;color:var(--text)}
+.drop{position:relative;display:grid;justify-items:center;gap:.35rem;padding:1.5rem 1rem;border:1.5px dashed #d9c2cb;border-radius:1rem;background:#fff;text-align:center;cursor:pointer;transition:border-color .18s ease,background-color .18s ease}
+.drop:hover{border-color:#b98fa0;background:#fbf6f9}
+.drop.is-over{border-color:var(--maroon);background:var(--tint)}
+.drop:focus-within{outline:3px solid var(--maroon);outline-offset:2px}
+.drop-input{position:absolute;inset:0;width:100%;height:100%;min-height:0;padding:0;opacity:0;cursor:pointer}
+.drop-text{font-size:.92rem;font-weight:400;color:var(--mute)}
+.drop-text b{color:var(--maroon);font-weight:700}
+.workspace .drop small{color:var(--mute);font-size:.78rem}
+.drop-file{display:flex;align-items:center;gap:.8rem;padding:.65rem .8rem;border:1px solid var(--rule);border-radius:.9rem;background:#fff}
+.drop-file .tile-icon{width:2.2rem;height:2.2rem;border-radius:.7rem;grid-area:auto}
+.drop-file-info{display:grid;min-width:0;flex:1}
+.drop-file-info strong{overflow:hidden;font-size:.92rem;text-overflow:ellipsis;white-space:nowrap}
+.workspace button.drop-remove{display:grid;place-items:center;width:2.2rem;min-height:2.2rem;padding:0;border:0;border-radius:50%;background:transparent;color:var(--mute)}
+.workspace button.drop-remove:hover:not(:disabled){background:#fde4e8;color:var(--red-dark)}
+.student-shell .workspace .drop-input{box-shadow:none}
+.drop .tile-icon,.drop-file .tile-icon{grid-area:auto}
+.workspace .drop{display:grid;grid-template-columns:minmax(0,1fr);gap:.35rem}
+
+/* Compact drop box: one row with the icon on the left */
+.workspace .drop{grid-template-columns:auto minmax(0,1fr);grid-template-areas:"i t" "i h";justify-items:start;align-items:center;column-gap:.8rem;row-gap:0;padding:.65rem .9rem;border-radius:.9rem;text-align:left}
+.drop .tile-icon{grid-area:i;width:2.3rem;height:2.3rem;border-radius:.7rem}
+.drop .drop-text{grid-area:t;line-height:1.3}
+.workspace .drop small{grid-area:h;line-height:1.3}
