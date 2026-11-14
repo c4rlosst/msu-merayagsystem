@@ -527,9 +527,8 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
    Staff keep the dark sidebar. The color variables below make every shared component adopt the plum. */
 .student-shell{
   --maroon:#750a5a;--maroon-dark:#5f0848;--wine:#4a0a3a;--tint:#f3e0ec;--fog:#eef0f4;--rule:#e1e4ea;--text:#2b2230;--mute:#6b6674;
-  grid-template-columns:14.75rem minmax(0,1fr);margin-left:18px;background:var(--fog)
+  grid-template-columns:14.75rem minmax(0,1fr);background:var(--fog)
 }
-.student-shell::before{content:"";position:fixed;left:0;top:0;bottom:0;width:18px;z-index:3;background:#7d1568 repeating-linear-gradient(135deg,#ffffff1c 0 3px,transparent 3px 8px)}
 
 .student-shell .sidebar{background:#fff;color:var(--text);border-right:1px solid var(--rule);padding:1.1rem .9rem 1rem}
 .menu-label{margin:1.1rem 0 .3rem .5rem;font-size:.65rem;font-weight:600;color:#8b8f99}
@@ -713,3 +712,16 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .workspace .password-group .password-toggle:hover:not(:disabled),.workspace .password-group .password-toggle[aria-pressed="true"]{background:var(--tint);color:var(--maroon)}
 .split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;align-items:start;margin-bottom:1.25rem}
 @media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+
+/* Menu highlight that slides to the page you pick (a gold bar for staff, a gold pill for students) */
+.sidebar nav{position:relative}
+.sidebar nav>a{position:relative;z-index:1}
+.nav-pill{position:absolute;left:0;top:0;z-index:0;border-radius:.6rem;background:#ffffff1f;pointer-events:none}
+.nav-pill::before{content:"";position:absolute;left:0;top:.6rem;bottom:.6rem;width:3px;border-radius:3px;background:var(--signal)}
+.nav-pill[data-animate="true"]{transition:transform .32s cubic-bezier(.3,.9,.3,1),width .32s cubic-bezier(.3,.9,.3,1),height .32s cubic-bezier(.3,.9,.3,1)}
+.clinic-shell .sidebar nav.has-pill>a[aria-current],.clinic-shell .sidebar nav.has-pill>a[aria-current]:hover{background:transparent}
+.clinic-shell .sidebar nav.has-pill>a[aria-current]::before{content:none}
+.student-shell .nav-pill{border-radius:.5rem;background:#fdebc3}
+.student-shell .nav-pill::before{content:none}
+.student-shell .sidebar nav a:not([aria-current]){transition:background-color .18s ease,color .18s ease}
+@media (prefers-reduced-motion:reduce){.nav-pill{transition:none!important}}

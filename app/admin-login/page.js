@@ -1,8 +1,6 @@
 import { redirect } from 'next/navigation';
-import { identity } from '../../lib/session.js';
-import { AuthScreen } from '../../lib/auth-screen.js';
 
-export default async function AdminLogin() {
-  if ((await identity())?.role === 'admin') redirect('/clinic');
-  return <AuthScreen admin />;
+// Administrators use the same staff sign-in as nurses.
+export default function AdminLogin() {
+  redirect('/nurse-login');
 }

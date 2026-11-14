@@ -14,6 +14,6 @@ update auth.users
 set raw_user_meta_data = coalesce(raw_user_meta_data, '{}'::jsonb) || jsonb_build_object('full_name', 'Your Name')
 where email = 'a01@admins.merayag.invalid';
 
--- 3. Sign in at /admin-login with the ID A-01 and your password.
+-- 3. Sign in at /nurse-login (the staff log in) with the ID A-01 and your password.
 --    More administrators: repeat with A-02, A-03, ...
 --    Nurses are added from the admin page, so there is no SQL for them.

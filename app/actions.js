@@ -19,13 +19,12 @@ async function limited(scope, value) {
   return data !== true;
 }
 
-// `kind` is false for students, or 'nurse' / 'admin' for the ID-and-password staff sign-ins.
+// `kind` is false for students, or 'staff' for the nurse / administrator ID-and-password sign-in.
 export async function signIn(kind, _, form) {
   const nurse = Boolean(kind);
   const nurseId = String(form.get('nurse_id') ?? '').trim().toUpperCase();
-  if (nurse && !staffPattern[kind].test(nurseId)) {
-    return { error: kind === 'admin' ? 'Enter your administrator ID, such as A-01.' : 'Enter your nurse ID, such as N-01.' };
-  }
+  const staffRole = staffPattern.nurse.test(nurseId) ? 'nurse' : staffPattern.admin.test(nurseId) ? 'admin' : null;
+  if (nurse && !staffRole) return { error: 'Enter your staff ID, such as N-01 or A-01.' };
   const email = emailField.safeParse(nurse
     ? staffAccount(nurseId)
     : String(form.get('email') ?? '').trim().toLowerCase());
@@ -67,11 +66,11 @@ export async function signIn(kind, _, form) {
     const { data, error } = await auth.signInWithPassword({ email: email.data, password });
     if (error || !data.session || !data.user?.email_confirmed_at) {
       return { error: nurse
-        ? 'Sign-in failed. Check your ' + (kind === 'admin' ? 'administrator' : 'nurse') + ' ID and password, or contact the infirmary.'
+        ? 'Sign-in failed. Check your staff ID and password, or contact the infirmary.'
         : 'Sign-in failed. Check your email and clinic account password, or contact the infirmary.' };
     }
     const { data: role } = await database(data.session.access_token).rpc('current_clinic_role');
-    if (nurse && role !== kind) return { error: 'This account does not have active ' + kind + ' access.' };
+    if (nurse && role !== staffRole) return { error: 'This account does not have active ' + staffRole + ' access.' };
     if (!role || (role === 'student' && !domains.includes(email.data.split('@')[1]))) {
       return { error: 'Use your approved university account to sign in.' };
     }

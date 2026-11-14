@@ -39,9 +39,9 @@ export function ActionForm({ action, children, label, className }) {
   </form>;
 }
 
-export function LoginForm({ signup = false, password = false, nurse = false, admin = false, emailDomain }) {
-  const [state, dispatch, pending] = useActionState(signIn.bind(null, admin ? 'admin' : nurse ? 'nurse' : false), {});
-  const staff = nurse || admin;
+export function LoginForm({ signup = false, password = false, nurse = false, emailDomain }) {
+  const [state, dispatch, pending] = useActionState(signIn.bind(null, nurse ? 'staff' : false), {});
+  const staff = nurse; // nurses and administrators sign in with an ID
   // With a single school domain, people only type the part before the @. The domain appears in the field
   // once they press @ (or paste a full address); the full address is always sent as `email`.
   const [username, setUsername] = useState('');
@@ -70,7 +70,7 @@ export function LoginForm({ signup = false, password = false, nurse = false, adm
     setMatched(null);
   }
   return <form action={dispatch} className="form-stack">
-    {staff ? <label>{admin ? 'Administrator ID' : 'Nurse ID'}<input name="nurse_id" autoComplete="username" placeholder={admin ? 'A-01' : 'N-01'} maxLength={10} required /></label> :
+    {staff ? <label>Staff ID<input name="nurse_id" autoComplete="username" placeholder="N-01 or A-01" maxLength={10} required /></label> :
       presetEmail ? <label>School email
         <span className="email-group" data-domain={domainShown}>
           <span className="email-sizer" data-value={username}>

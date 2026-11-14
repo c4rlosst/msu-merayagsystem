@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { signOut } from '../actions.js';
 import { Icon } from '../icons.js';
 
@@ -16,6 +17,37 @@ const studentLinks = [
   ['home', '/clinic', 'Home', 'home'], ['book', '/clinic/book', 'Book an Appointment', 'book'],
   ['appointments', '/clinic/appointments', 'My Appointments', 'history'], ['profile', '/clinic/profile', 'My Profile', 'user']
 ];
+
+// The menu. A highlight slides up or down to the page you pick, the moment you click it, instead of
+// jumping once the new page has loaded. `items` are [key, href, label, icon?]; `current` is a key.
+function SlideNav({ items, current, preview }) {
+  const nav = useRef(null);
+  const pathname = usePathname();
+  const [chosen, setChosen] = useState(null);
+  const [pill, setPill] = useState(null);
+  const [animate, setAnimate] = useState(false);
+  const active = chosen ?? current;
+  useEffect(() => setChosen(null), [pathname]);
+  useLayoutEffect(() => {
+    const place = () => {
+      const link = [...nav.current.children].find((child) => child.dataset.key === active);
+      setPill(link ? { x: link.offsetLeft, y: link.offsetTop, width: link.offsetWidth, height: link.offsetHeight } : null);
+    };
+    place();
+    window.addEventListener('resize', place);
+    return () => window.removeEventListener('resize', place);
+  }, [active]);
+  useEffect(() => { if (pill) setAnimate(true); }, [pill]); // no slide-in on the first paint
+  return <nav aria-label="Clinic" ref={nav} className={pill ? 'has-pill' : undefined}>
+    {pill && <span className="nav-pill" aria-hidden="true" data-animate={animate}
+      style={{ width: pill.width, height: pill.height, transform: 'translate(' + pill.x + 'px,' + pill.y + 'px)' }} />}
+    {items.map(([key, href, label, icon]) =>
+      <Link key={key} href={preview && icon ? '/preview?page=' + key : href} data-key={key}
+        aria-current={key === active ? 'page' : undefined} onClick={() => setChosen(key)}>
+        {icon && <Icon name={icon} />}{label}{icon && key === active && <Icon name="chevron" size={18} className="nav-chevron" />}
+      </Link>)}
+  </nav>;
+}
 
 // The sidebar and page frame. It lives in the clinic layout, so it stays on screen while only the
 // content area changes (and shows a loading skeleton) when someone moves between pages.
@@ -33,11 +65,7 @@ export function ClinicShell({ role, email, name, detail, avatar, preview, childr
           <span><b>MERAYAG</b><small>Student portal</small></span>
         </Link>
         <p className="menu-label">Main Menu</p>
-        <nav aria-label="Clinic">{studentLinks.map(([key, href, label, icon]) =>
-          <Link key={key} href={preview ? '/preview?page=' + key : href} aria-current={key === current ? 'page' : undefined}>
-            <Icon name={icon} />{label}{key === current && <Icon name="chevron" size={18} className="nav-chevron" />}
-          </Link>
-        )}</nav>
+        <SlideNav items={studentLinks} current={current} preview={preview} />
         <form action={signOut} className="signout"><button className="quiet"><Icon name="logout" />Sign Out</button></form>
       </aside>
       <div className="student-main">
@@ -58,9 +86,7 @@ export function ClinicShell({ role, email, name, detail, avatar, preview, childr
         <Image src="/merayag-phoenix-panel.png" alt="" width={689} height={1000} sizes="48px" className="brand-mark" priority />
         <span><b>MERAYAG</b><small>{roleNames[role]} portal</small></span>
       </Link>
-      <nav aria-label="Clinic">{links[role].map(([href, label]) =>
-        <Link key={href} href={href} aria-current={href === current ? 'page' : undefined}>{label}</Link>
-      )}</nav>
+      <SlideNav items={links[role].map(([href, label]) => [href, href, label])} current={current} />
       <div className="sidebar-foot">
         <div className="staff-id" title={email}><b>{name ?? email}</b>{detail && <small>{detail}</small>}</div>
         <form action={signOut}><button className="quiet">Sign out</button></form>
