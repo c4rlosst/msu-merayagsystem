@@ -527,7 +527,7 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
    Staff keep the dark sidebar. The color variables below make every shared component adopt the plum. */
 .student-shell{
   --maroon:#750a5a;--maroon-dark:#5f0848;--wine:#4a0a3a;--tint:#f3e0ec;--fog:#eef0f4;--rule:#e1e4ea;--text:#2b2230;--mute:#6b6674;
-  grid-template-columns:14.75rem minmax(0,1fr);background:var(--fog)
+  grid-template-columns:16rem minmax(0,1fr);background:var(--fog)
 }
 
 .student-shell .sidebar{background:#fff;color:var(--text);border-right:1px solid var(--rule);padding:1.1rem .9rem 1rem}
@@ -725,3 +725,8 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .student-shell .nav-pill::before{content:none}
 .student-shell .sidebar nav a:not([aria-current]){transition:background-color .18s ease,color .18s ease}
 @media (prefers-reduced-motion:reduce){.nav-pill{transition:none!important}}
+
+/* Student menu: links fill the sidebar and never grow past it (the highlight is as wide as the link) */
+.student-shell .sidebar nav{grid-template-columns:minmax(0,1fr)}
+.student-shell .sidebar nav a{min-width:0;gap:.55rem;padding:.6rem .6rem;font-size:.9rem}
+@media (max-width:860px){.student-shell .sidebar nav{grid-template-columns:none}}
