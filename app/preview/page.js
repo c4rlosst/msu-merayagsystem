@@ -1,7 +1,6 @@
 import { PreviewBooking } from './booking.js';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
+import { ClinicShell } from '../clinic/clinic-shell.js';
 import { StudentDashboard } from '../../lib/student-dashboard.js';
 import { AppointmentList } from '../../lib/appointment-list.js';
 import { ScheduleCalendar } from '../schedule-calendar.js';
@@ -51,19 +50,13 @@ export default async function DashboardPreview({ searchParams }) {
   const today = manilaDate(Date.now());
   const date = isDateKey(query.date) ? query.date : today;
   const appointments = query.empty ? [] : sampleAppointments(today);
-  return <div className="clinic-shell">
-    <aside className="sidebar">
-      <Link href="/preview" className="brand">
-        <Image src="/merayag-phoenix-panel.png" alt="" width={689} height={1000} sizes="48px" className="brand-mark" priority />
-        <span><b>MERAYAG</b><small>Student portal</small></span>
-      </Link>
-      <nav aria-label="Clinic">{[['home','Home'],['book','Book'],['appointments','My appointments'],['profile','My profile'],['schedule','Nurse schedule']].map(([key,label]) =>
-        <Link key={key} href={'/preview?page='+key} aria-current={page===key?'page':undefined}>{label}</Link>)}</nav>
-      <div className="sidebar-foot"><span>student@school.example</span><button className="quiet" type="button">Sign out</button></div>
-    </aside>
-    <main className="workspace">
+  const announcements = query.empty ? [] : [
+    { id: 'n1', title: 'Infirmary schedule update', body: 'The infirmary will be closed on November 14 (Friday).' },
+    { id: 'n2', title: 'Flu vaccination week', body: 'Free flu shots at the infirmary, November 17 to 21, 9 AM to 3 PM.' }
+  ];
+  return <ClinicShell role="student" email="student@school.example" name="Santos" detail="Maria" avatar={null} preview={page}>
       <div key={page} className="menu-content">
-      {page==='home' && <StudentDashboard appointments={appointments} name="Maria Santos" released={1} preview/>}
+      {page==='home' && <StudentDashboard appointments={appointments} name="Maria Santos" released={1} announcements={announcements} preview/>}
       {page==='appointments' && <AppointmentList appointments={appointments} preview/>}
       {page==='book' && <PreviewBooking slots={query.empty ? [] : sampleSlots(today)} />}
       {page==='schedule' && <>
@@ -85,6 +78,5 @@ export default async function DashboardPreview({ searchParams }) {
         </section>
       </>}
       </div>
-    </main>
-  </div>;
+  </ClinicShell>;
 }

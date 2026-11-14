@@ -531,3 +531,108 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .slot-cancel summary{cursor:pointer;color:var(--maroon);font-weight:600}
 .slot-cancel[open]{grid-column:1/-1}
 .slot-cancel form{margin-top:.8rem}
+
+/* ===================== Student portal theme =====================
+   Light sidebar with icons, a top bar with the student's name and photo, plum accents, soft shadows.
+   Staff keep the dark sidebar. The color variables below make every shared component adopt the plum. */
+.student-shell{
+  --maroon:#750a5a;--maroon-dark:#5f0848;--wine:#4a0a3a;--tint:#f3e0ec;--fog:#eef0f4;--rule:#e1e4ea;--text:#2b2230;--mute:#6b6674;
+  grid-template-columns:14.75rem minmax(0,1fr);margin-left:18px;background:var(--fog)
+}
+.student-shell::before{content:"";position:fixed;left:0;top:0;bottom:0;width:18px;z-index:3;background:#7d1568 repeating-linear-gradient(135deg,#ffffff1c 0 3px,transparent 3px 8px)}
+
+.student-shell .sidebar{background:#fff;color:var(--text);border-right:1px solid var(--rule);padding:1.1rem .9rem 1rem}
+.student-shell .sidebar .brand{display:flex;align-items:center;gap:.55rem;padding:0 .3rem 1rem;border-bottom:1px solid var(--rule);color:#8a3a7e;font:inherit}
+.student-shell .brand-mark{width:2.7rem;height:auto}
+.student-shell .sidebar .brand span{font:italic 600 1.5rem Georgia,"Palatino Linotype","Times New Roman",serif;letter-spacing:.05em;color:#8a3a7e}
+.menu-label{margin:1.1rem 0 .3rem .5rem;font-size:.65rem;font-weight:600;color:#8b8f99}
+.student-shell .sidebar nav{gap:.25rem}
+.student-shell .sidebar nav a{display:flex;align-items:center;gap:.65rem;padding:.6rem .65rem;border-radius:.5rem;color:#8b8f99;font-size:.92rem;font-weight:650;white-space:nowrap}
+.student-shell .sidebar nav a:hover{background:#f6f1f5;color:var(--maroon)}
+.student-shell .sidebar nav a[aria-current]{background:#fdebc3;color:#2f2200;font-weight:700}
+.nav-chevron{margin-left:auto;color:var(--signal)}
+.student-shell .sidebar :focus-visible{outline-color:var(--maroon)}
+.student-shell .signout{margin:auto 0 0;padding-top:.9rem;border-top:1px solid var(--rule)}
+.student-shell .sidebar .signout button{display:flex;align-items:center;justify-content:flex-start;gap:.6rem;width:100%;min-height:2.6rem;padding:.4rem .6rem;border:0;border-radius:.5rem;background:transparent;color:#1d1a22;font-weight:700}
+.student-shell .sidebar .signout button:hover{background:#f6f1f5}
+
+.student-main{display:flex;flex-direction:column;min-width:0}
+.topbar{display:flex;justify-content:flex-end;align-items:center;gap:.8rem;padding:.7rem 1.8rem;background:#fff;border-bottom:1px solid var(--rule)}
+.topbar .who{text-align:right;line-height:1.2}
+.topbar .who b{display:block;font-size:.98rem;color:#1d1a22}
+.topbar .who small{display:block;font-size:.78rem;color:var(--mute)}
+.avatar{display:grid;place-items:center;width:2.7rem;height:2.7rem;border-radius:50%;object-fit:cover;background:var(--tint);color:var(--maroon);font-weight:700}
+.student-shell .workspace{max-width:none;padding:1.6rem clamp(1rem,3vw,2.6rem) 3rem}
+.student-shell .workspace :is(h1,h2,h3){color:var(--maroon)}
+.student-shell .workspace .paper{border:0;border-radius:.6rem;box-shadow:0 1px 3px #0000001a}
+.student-shell .workspace .button.plum{display:inline-flex;align-items:center;gap:.5rem}
+
+/* Home */
+.dash{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:2rem;align-items:start}
+.dash-main h1{margin:0 0 1.4rem;font-size:clamp(1.9rem,3vw,2.5rem)}
+.student-shell .dash-hero h2{margin:0 0 .5rem;font-size:clamp(1.3rem,2vw,1.6rem);line-height:1.25;color:#14101a}
+.dash-hero{max-width:34rem;margin-bottom:2rem}
+.dash-hero p{margin:0 0 1.1rem;font-size:.9rem;color:var(--text)}
+.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem 2rem;margin:0 0 1.8rem}
+.stat-grid div{position:relative;display:grid;gap:.05rem;margin:0}
+.stat-grid dt{font-size:.8rem;font-weight:700;color:#17131c}
+.stat-grid dd{margin:0;font:700 1.9rem/1.1 var(--heading);color:#17131c;font-variant-numeric:tabular-nums}
+.stat-grid small{font-size:.7rem;color:var(--mute)}
+.stat-icon{position:absolute;right:1.5rem;top:0;color:var(--maroon)}
+.history .appointment-empty{padding:2rem 0;text-align:center}
+.history .appointment-empty h3{color:#14101a}
+.dash-side{display:grid;gap:1.6rem}
+.next-card{padding:1rem 1.5rem;border-radius:1.2rem;background:#fff;box-shadow:0 4px 14px #00000026}
+.next-card .kicker{margin:0 0 .3rem;max-width:none;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon)}
+.student-shell .next-card h3{margin:0 0 .3rem;font-size:1.15rem;color:#14101a}
+.next-card p{margin:0 0 .5rem;font-size:.85rem;color:var(--text)}
+.next-card .next-time{display:inline-block;padding:.15rem .8rem;border-radius:2rem;background:var(--signal);color:#2a1c22;font-weight:700}
+.next-card .next-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .9rem;max-width:none}
+.quick h2,.announce h2{margin:0 0 .8rem;font-size:1.1rem}
+.quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}
+.workspace .quick-grid a{display:grid;justify-items:center;gap:.5rem;padding:1rem .5rem;border-radius:.8rem;background:#fff;box-shadow:0 2px 8px #0000001f;color:var(--maroon);font-size:.9rem;font-weight:700;text-align:center;text-decoration:none}
+.workspace .quick-grid a:hover{background:#faf2f8}
+.notice{display:flex;align-items:center;gap:.9rem;margin-bottom:.7rem;padding:.9rem 1.2rem;border-radius:1.4rem;background:var(--tint);color:var(--maroon)}
+.notice svg{flex:none}
+.notice strong{display:block;font-size:.78rem;text-transform:uppercase;color:#3a2f40}
+.workspace .notice p{margin:.1rem 0 0;font-size:.82rem;color:#3a2f40}
+.workspace .announce-empty{margin:0;font-size:.9rem}
+@media (max-width:1100px){.dash{grid-template-columns:minmax(0,1fr)}}
+
+/* Booking, themed like the design */
+.student-shell .workspace button.submit{min-height:2.6rem;padding:.4rem 1.5rem;background:var(--signal);color:#2a1c22;font-weight:600}
+.student-shell .workspace button.submit:hover:not(:disabled){background:#ffc43d}
+.student-shell .slot{padding:.5rem 1.1rem;border-color:var(--tint);border-radius:2rem;background:var(--tint);color:var(--maroon)}
+.student-shell .slot small{color:#6b4a65}
+.student-shell .slot:hover{border-color:#ecd0e2;background:#ecd0e2}
+.student-shell .slot:has(input:checked){border-color:var(--maroon);background:var(--maroon);color:#fff}
+.student-shell .slot:has(input:checked) small{color:#f0d6e8}
+.slot-field legend small{display:block;font-weight:400;color:var(--mute)}
+.student-shell .workspace .cal-day.has-slots{border-color:transparent;background:transparent;color:var(--maroon);font-weight:700}
+.student-shell .workspace .cal-day:disabled{color:#b9b4bf}
+.student-shell .workspace .cal-day:hover:not(:disabled){background:var(--tint);color:var(--maroon)}
+.student-shell .workspace .cal-day[aria-pressed="true"],.student-shell .workspace .cal-day[aria-pressed="true"]:hover:not(:disabled){border-color:var(--maroon);border-radius:50%;background:var(--maroon);color:#fff}
+.student-shell .chip{justify-content:center;padding:.9rem 1.4rem;border:0;border-radius:.7rem;background:#fff;box-shadow:0 2px 8px #00000024;color:#17131c;font-weight:700}
+.student-shell .chip:hover{background:#faf2f8}
+.student-shell .chip:has(input:checked){background:var(--maroon);color:#fff}
+.student-shell .workspace textarea,.student-shell .workspace input[type=file]{border:0;box-shadow:0 2px 8px #00000024}
+
+/* Nurse: posted announcements */
+.notice-row{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;padding:.9rem .5rem;border-top:1px solid var(--rule)}
+.notice-row:first-child{border-top:0}
+.notice-row .visit-what{gap:.15rem}
+.notice-row .visit-what>span:not(.visit-sub){color:var(--mute);font-size:.92rem}
+.workspace .notice-row .inline-form button{min-height:2.2rem;padding:.2rem .9rem;border-color:#d9c2cb;background:#fff;color:var(--maroon);font-size:.88rem}
+@media (max-width:860px){.student-shell{grid-template-columns:minmax(0,1fr)}.student-shell .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule)}.topbar{padding:.6rem 1rem}.quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* Student portal on phones: one tidy header row, a sideways-scrolling menu under it */
+.stat-grid dt{padding-right:2rem}
+.stat-icon{right:0}
+@media (max-width:860px){
+  .student-shell .sidebar{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .8rem;padding:.7rem .9rem .5rem}
+  .student-shell .sidebar .brand{flex:1;padding:0;border:0}
+  .student-shell .menu-label{display:none}
+  .student-shell .signout{order:2;margin:0;padding:0;border:0}
+  .student-shell .sidebar .signout button{width:auto;padding:.4rem .7rem}
+  .student-shell .sidebar nav{order:3;width:100%}
+}

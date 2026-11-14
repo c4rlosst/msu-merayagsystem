@@ -119,7 +119,7 @@ export function BookingForm({ reasons, preview = false }) {
         <small>JPG, PNG, or PDF. Up to 5 MB.</small>
       </label>
       {state.error && <p className="error" role="alert">{state.error}</p>}
-      <button disabled={pending}>{pending ? 'Booking…' : preview ? 'Preview request' : 'Request appointment'}</button>
+      <button className="submit" disabled={pending}>{pending ? 'Booking…' : preview ? 'Preview request' : 'Request appointment'}</button>
       {state.message && <p role="status">{state.message}</p>}
     </section>
     <aside className="paper next-steps" aria-label="What happens next">

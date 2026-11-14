@@ -237,6 +237,31 @@ export async function submitSlotBooking(_, form) {
   redirect(detail(data.id));
 }
 
+const announcement = z.object({
+  title: z.string().trim().min(1).max(120), body: z.string().trim().min(1).max(600),
+  until: z.union([z.literal(''), z.iso.date()]).optional()
+});
+
+export async function postAnnouncement(_, form) {
+  const { db } = await requireRole('nurse');
+  const input = announcement.safeParse(Object.fromEntries(form));
+  if (!input.success) return { error: 'Enter a title (up to 120 characters) and a message (up to 600 characters).' };
+  const { error } = await db.rpc('post_clinic_announcement', {
+    announcement_title: input.data.title, announcement_body: input.data.body, show_until: input.data.until || null
+  });
+  if (error) return { error: safeError(error, 'The announcement could not be posted. Try again.') };
+  redirect('/clinic/announcements');
+}
+
+export async function removeAnnouncement(_, form) {
+  const { db } = await requireRole('nurse');
+  const id = uid.safeParse(form.get('id'));
+  if (!id.success) return { error: 'Choose a valid announcement.' };
+  const { error } = await db.rpc('remove_clinic_announcement', { announcement_key: id.data });
+  if (error) return { error: safeError(error, 'The announcement could not be removed. Try again.') };
+  redirect('/clinic/announcements');
+}
+
 function safeError(error, fallback) {
   return error?.code === 'P0001' ? error.message : fallback;
 }

@@ -59,10 +59,10 @@ export function SlotBooking({ slots, reasons, requestHref, preview = false }) {
         })}
       </div>
       <fieldset className="slot-field">
-        <legend>{day ? 'Open times on ' + dayLabel(day) : 'Pick a day to see open times'}</legend>
+        <legend>Available time slots<small>{day ? dayLabel(day) : 'Pick a day to see open times'}</small></legend>
         <div className="slot-times">{times.map((slot) => <label className="slot" key={slot.id}>
           <input type="radio" name="slot" value={slot.id} checked={slotId === slot.id} onChange={() => setSlotId(slot.id)} required />
-          <b>{timeLabel(manilaMinutes(slot.start))}</b><small>{slot.left} {slot.left === 1 ? 'place' : 'places'} left</small>
+          <b>{timeLabel(manilaMinutes(slot.start))}</b><small>{slot.left} of {slot.capacity ?? slot.left} {(slot.capacity ?? slot.left) === 1 ? 'slot' : 'slots'} left</small>
         </label>)}</div>
       </fieldset>
     </section>
@@ -82,7 +82,7 @@ export function SlotBooking({ slots, reasons, requestHref, preview = false }) {
         : 'Choose a day and time on the left.'}</p>
       {state.error && <p className="error" role="alert">{state.error}</p>}
       {state.message && <p role="status">{state.message}</p>}
-      <button disabled={pending || !chosen}>{pending ? 'Booking…' : 'Book this time'}</button>
+      <button className="submit" disabled={pending || !chosen}>{pending ? 'Submitting…' : 'Submit request'}</button>
       <p className="slot-fallback">No time that works? <Link href={requestHref}>Send a request instead</Link>. For emergencies, seek immediate help.</p>
     </section>
   </form>;

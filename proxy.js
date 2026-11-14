@@ -8,7 +8,7 @@ export function proxy(request) {
   const development = process.env.NODE_ENV === 'development';
   const csp = [
     "default-src 'self'", "base-uri 'self'", "object-src 'none'", "frame-ancestors 'none'",
-    "img-src 'self' data:", "font-src 'self'", "connect-src 'self'" + (development ? ' ws: wss:' : ''),
+    "img-src 'self' data: https://*.googleusercontent.com", "font-src 'self'", "connect-src 'self'" + (development ? ' ws: wss:' : ''),
     "form-action 'self'", "style-src 'self' 'unsafe-inline'",
     "script-src 'self' 'nonce-" + nonce + "'" + (development ? " 'unsafe-eval'" : '')
   ].join('; ');

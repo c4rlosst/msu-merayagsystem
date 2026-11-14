@@ -5,5 +5,11 @@ import { ClinicShell } from './clinic-shell.js';
 // in place between pages so only the content area reloads.
 export default async function ClinicLayout({ children }) {
   const { user, role } = await requireRole();
-  return <ClinicShell role={role} email={user.email}>{children}</ClinicShell>;
+  // Google sign-in supplies the name and photo. Only a Google-hosted photo is ever shown.
+  const meta = user.user_metadata ?? {};
+  const photo = meta.avatar_url ?? meta.picture;
+  const avatar = typeof photo === 'string' && /^https:\/\/[a-z0-9.-]+\.googleusercontent\.com\//i.test(photo) ? photo : null;
+  const name = meta.family_name || meta.full_name || meta.name || user.email.split('@')[0];
+  const detail = meta.family_name ? meta.given_name : user.email;
+  return <ClinicShell role={role} email={user.email} name={name} detail={detail} avatar={avatar}>{children}</ClinicShell>;
 }

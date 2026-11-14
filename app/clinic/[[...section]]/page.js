@@ -6,7 +6,7 @@ import { requireRole } from '../../../lib/session.js';
 import { clinicDate, reasons, statuses, urgencyLabels } from '../../../lib/clinic.js';
 import { AppointmentList } from '../../../lib/appointment-list.js';
 import { StudentDashboard, VisitDate } from '../../../lib/student-dashboard.js';
-import { clinicAction, createNurseAccount, manageStaffAccess } from '../../actions.js';
+import { clinicAction, createNurseAccount, manageStaffAccess, postAnnouncement, removeAnnouncement } from '../../actions.js';
 import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
 import { SlotBooking } from '../../slot-booking.js';
 import { manilaDate, timeLabel } from '../../../lib/manila.js';
@@ -48,6 +48,8 @@ export default async function Clinic({ params, searchParams }) {
     content = await Profile({ db, user });
   } else if (section.length === 1 && screen === 'calendar' && role === 'nurse') {
     content = await NurseCalendar({ db, filters: await searchParams });
+  } else if (section.length === 1 && screen === 'announcements' && role === 'nurse') {
+    content = await Announcements({ db });
   } else if (section.length === 1 && screen === 'slots' && role === 'nurse') {
     content = await Slots({ db });
   } else if (section.length === 1 && screen === 'releases' && role === 'nurse') {
@@ -131,9 +133,9 @@ async function Book({ db, user, filters }) {
   const rows = checked(await db.from('slots').select('id, starts_at, ends_at, capacity, held_count')
     .gt('starts_at', new Date().toISOString()).is('retired_at', null).order('starts_at').limit(600));
   const slots = rows.filter((slot) => slot.capacity > slot.held_count).map((slot) => ({
-    id: slot.id, start: Date.parse(slot.starts_at), end: Date.parse(slot.ends_at), left: slot.capacity - slot.held_count
+    id: slot.id, start: Date.parse(slot.starts_at), end: Date.parse(slot.ends_at), left: slot.capacity - slot.held_count, capacity: slot.capacity
   }));
-  return <><Heading title="Book an appointment">Pick a day with open times, choose a time, and tell the nurse why you’re coming. A nurse will confirm your visit.</Heading>
+  return <><Heading title="Book an appointment">Slots are released by infirmary nurses. Choose an open time, tell us why you’re coming, and we will confirm your reference number.</Heading>
     <SlotBooking slots={slots} reasons={reasons} requestHref="/clinic/book?mode=request" /></>;
 }
 
@@ -179,6 +181,29 @@ async function Slots({ db }) {
             </ActionForm></details>}
         </div>;
       })}</div> : <Empty>No days are open yet. Open a day above so students can book.</Empty>}
+    </section></>;
+}
+
+async function Announcements({ db }) {
+  const { data, error } = await db.from('announcements').select('id, title, body, created_at, expires_at')
+    .order('created_at', { ascending: false }).limit(50);
+  if (error) return <><Heading title="Announcements">Post notices students see on their home screen.</Heading>
+    <Empty>Announcements aren’t available yet. Apply the latest database update, then reload this page.</Empty></>;
+  return <><Heading title="Announcements">Post notices students see on their home screen, such as a closure or a schedule change.</Heading>
+    <ActionForm action={postAnnouncement} label="Post announcement" className="paper form-stack">
+      <h2>New announcement</h2>
+      <label>Title<input name="title" required maxLength={120} /></label>
+      <label>Message<textarea name="body" required maxLength={600} rows={3} /></label>
+      <label>Last day to show it (optional)<input type="date" name="until" />
+        <small>Leave this empty to keep it up until you remove it.</small></label>
+    </ActionForm>
+    <section><h2>Posted announcements</h2>
+      {data.length ? <div className="paper list">{data.map((notice) => <div className="notice-row" key={notice.id}>
+        <span className="visit-what"><strong>{notice.title}</strong><span>{notice.body}</span>
+          <span className="visit-sub"><span>Posted {clinicDate(notice.created_at, { dateStyle: 'medium' })}</span>
+            {notice.expires_at && <span>Shown until {clinicDate(Date.parse(notice.expires_at) - 1, { dateStyle: 'medium' })}</span>}</span></span>
+        <ActionForm action={removeAnnouncement} label="Remove" className="inline-form"><input type="hidden" name="id" value={notice.id} /></ActionForm>
+      </div>)}</div> : <Empty>No announcements yet.</Empty>}
     </section></>;
 }
 
@@ -397,5 +422,6 @@ async function StudentHome({ db, user }) {
     db.from('profiles').select('full_name').eq('user_id',user.id).maybeSingle(),
     db.from('certificates').select('appointment_id').eq('status','released')
   ])).map(checked);
-  return <StudentDashboard appointments={appointments} name={profile?.full_name ?? 'Student'} released={certificates.length}/>;
+  const { data: announcements } = await db.from('announcements').select('id, title, body').order('created_at', { ascending: false }).limit(3);
+  return <StudentDashboard appointments={appointments} name={profile?.full_name ?? 'Student'} released={certificates.length} announcements={announcements ?? []}/>;
 }
