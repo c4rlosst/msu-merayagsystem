@@ -12,6 +12,8 @@ import { SlotBooking } from '../../slot-booking.js';
 import { Badge, Empty, Heading, Rows } from '../../../lib/clinic-ui.js';
 import { NurseDeskView } from '../../../lib/nurse-desk.js';
 import { AdminDeskView } from '../../../lib/admin-desk.js';
+import { AccountView } from '../../../lib/account.js';
+import { accountLabel } from '../../../lib/staff-id.js';
 import { manilaDate, timeLabel } from '../../../lib/manila.js';
 
 const roleNames = { student: 'Student', nurse: 'Nurse', physician: 'Physician', admin: 'Administrator' };
@@ -31,9 +33,12 @@ export default async function Clinic({ params, searchParams }) {
     if (role === 'student') content = await StudentHome({ db, user });
     if (role === 'nurse') content = await NurseDesk({ db });
     if (role === 'physician') content = await PhysicianQueue({ db });
-    if (role === 'admin') content = await AdminDesk({ db });
+    if (role === 'admin') content = await AdminDesk({ db, user });
   } else if (section.length === 1 && screen === 'admin' && role === 'admin') {
-    content = await AdminDesk({ db });
+    content = await AdminDesk({ db, user });
+  } else if (section.length === 1 && screen === 'account' && role !== 'student') {
+    const named = user.user_metadata?.full_name || user.user_metadata?.name;
+    content = <AccountView name={named || accountLabel(user.email)} account={accountLabel(user.email)} roleLabel={roleNames[role]} />;
   } else if (section.length === 1 && screen === 'appointments' && role === 'student') {
     content = await Appointments({ db });
   } else if (section.length === 1 && screen === 'book' && role === 'student') {
@@ -61,8 +66,8 @@ export default async function Clinic({ params, searchParams }) {
   return <div key={section.join('/') || 'home'} className="menu-content">{content}</div>;
 }
 
-async function AdminDesk({ db }) {
-  return <AdminDeskView staff={checked(await db.rpc('list_clinic_staff'))} />;
+async function AdminDesk({ db, user }) {
+  return <AdminDeskView staff={checked(await db.rpc('list_clinic_staff'))} selfEmail={user.email} />;
 }
 
 async function Profile({ db, user }) {

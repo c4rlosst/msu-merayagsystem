@@ -72,7 +72,7 @@ export default async function DashboardPreview({ searchParams }) {
     return <ClinicShell role={page} email="n-01@nurses.merayag.invalid" name={page === 'nurse' ? 'Liza Ramos' : 'admin@msugensan.edu.ph'} detail={page === 'nurse' ? 'N-01' : ''}>
       <div className="menu-content">{page === 'nurse'
         ? <NurseDeskView pending={pending} upcoming={todayVisits} students={students} counts={{ releases: query.empty ? 0 : 2, openDays: query.empty ? 0 : 6 }} plain />
-        : <AdminDeskView staff={query.empty ? [] : staff} />}</div>
+        : <AdminDeskView staff={query.empty ? [] : staff} selfEmail="admin@msugensan.edu.ph" />}</div>
     </ClinicShell>;
   }
   return <ClinicShell role="student" email="student@school.example" name="Santos" detail="Maria" avatar={null} preview={page}>

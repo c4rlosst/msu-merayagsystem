@@ -128,6 +128,57 @@ export async function manageStaffAccess(_, form) {
   redirect('/clinic/admin');
 }
 
+// Staff change their own password: the current one is checked first, then the new one is saved.
+// Supabase ends all sessions when a password changes, so they sign in again with the new one.
+export async function changePassword(_, form) {
+  const { user } = await requireRole('nurse', 'physician', 'admin');
+  const [current, next, again] = ['current', 'password', 'confirm'].map((field) => form.get(field));
+  if ([current, next, again].some((value) => typeof value !== 'string' || !value)) return { error: 'Fill in all three password fields.' };
+  if (next.length < 6 || Buffer.byteLength(next, 'utf8') > 72) return { error: 'Use a new password with at least 6 characters and at most 72 bytes.' };
+  if (next !== again) return { error: 'The new password and its confirmation do not match.' };
+  if (next === current) return { error: 'Choose a new password that is different from your current one.' };
+  if (await limited('sign_in_email', user.email)) return { error: 'Too many attempts. Try again in a minute.' };
+  const check = await database().auth.signInWithPassword({ email: user.email, password: current });
+  if (check.error || !check.data.session) return { error: 'Your current password is not correct.' };
+  const { error } = await storageAdmin().auth.admin.updateUserById(user.id, { password: next });
+  if (error) return { error: 'The password could not be changed. Try again in a moment.' };
+  await clearSession();
+  redirect('/nurse-login?changed=1');
+}
+
+// Supabase has no lookup by email, so page through the accounts until the one we want turns up.
+async function findUserId(email) {
+  const admin = storageAdmin().auth.admin;
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await admin.listUsers({ page, perPage: 1000 });
+    if (error || !data) return null;
+    const found = data.users.find((candidate) => candidate.email?.toLowerCase() === email);
+    if (found) return found.id;
+    if (data.users.length < 1000) return null;
+  }
+  return null;
+}
+
+// An administrator sets a new password for a nurse or physician who forgot theirs. Only those two
+// roles can be reset here, never students or other administrators.
+export async function resetStaffPassword(_, form) {
+  const { db } = await requireRole('admin');
+  const email = emailField.safeParse(String(form.get('email') ?? '').trim().toLowerCase());
+  const password = form.get('password');
+  if (!email.success) return { error: 'Choose a staff member.' };
+  if (typeof password !== 'string' || password.length < 6 || Buffer.byteLength(password, 'utf8') > 72) {
+    return { error: 'Use a password with at least 6 characters and at most 72 bytes.' };
+  }
+  const staff = await db.rpc('list_clinic_staff');
+  const member = staff.data?.find((candidate) => candidate.email.toLowerCase() === email.data);
+  if (staff.error || !member || member.role === 'admin') return { error: 'Only nurses and physicians can have their password reset here.' };
+  const id = await findUserId(email.data);
+  if (!id) return { error: 'That account could not be found.' };
+  const { error } = await storageAdmin().auth.admin.updateUserById(id, { password });
+  if (error) return { error: 'The password could not be reset. Try again in a moment.' };
+  return { message: 'New password saved. Give it to them in person.' };
+}
+
 export async function createNurseAccount(_, form) {
   const { db } = await requireRole('admin');
   const id = String(form.get('nurse_id') ?? '').trim().toUpperCase();

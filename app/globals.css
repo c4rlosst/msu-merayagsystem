@@ -792,8 +792,6 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 }
 
 /* The red action is a white card with a red icon and a hint of red in its border, never a solid fill */
-.workspace .actions a.tone-red{border-color:#f1c2cb}
-.workspace .actions a.tone-red:hover{border-color:#e58fa0;box-shadow:0 8px 18px #c0183c24}
 .workspace .actions a{color:var(--wine)}
 .student-shell .workspace .actions a{color:#3a1030}
 
@@ -819,3 +817,14 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
   .admin-table td:nth-child(5){grid-area:act;justify-self:end}
   .admin-table tbody tr:hover{background:transparent}
 }
+.workspace .success{margin:0;color:#1d6a45;font-weight:600}
+.auth-form-content .success{margin:0 0 1rem;color:#1d6a45;font-weight:600}
+
+/* Staff directory row actions: reset password opens a small form under the button */
+.row-actions{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:flex-end;gap:.5rem}
+.row-reset summary{display:inline-flex;align-items:center;min-height:2.2rem;padding:.2rem .9rem;border:1px solid #d9c2cb;border-radius:2rem;background:#fff;color:var(--maroon);font-size:.85rem;font-weight:700;cursor:pointer;list-style:none}
+.row-reset summary::-webkit-details-marker{display:none}
+.row-reset summary:hover{background:var(--tint)}
+.row-reset[open] summary{background:var(--tint)}
+.row-reset form{display:grid;gap:.6rem;width:min(16rem,70vw);margin-top:.5rem;padding:.8rem;border:1px solid var(--rule);border-radius:.9rem;background:#fff;text-align:left}
+.workspace .row-actions .button.quiet{min-height:2.2rem;padding:.2rem .9rem;font-size:.85rem}

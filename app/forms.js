@@ -35,6 +35,7 @@ export function ActionForm({ action, children, label, className }) {
   return <form action={dispatch} className={className}>
     {children}
     {state?.error && <p role="alert" className="error">{state.error}</p>}
+    {state?.message && <p role="status" className="success">{state.message}</p>}
     <button disabled={pending}>{pending ? 'Saving…' : label}</button>
   </form>;
 }

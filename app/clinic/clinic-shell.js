@@ -9,9 +9,9 @@ import { Icon } from '../icons.js';
 
 const roleNames = { student: 'Student', nurse: 'Nurse', physician: 'Physician', admin: 'Administrator' };
 const links = {
-  nurse: [['/clinic', 'Clinic desk'], ['/clinic/calendar', 'Calendar'], ['/clinic/slots', 'Open slots'], ['/clinic/announcements', 'Announcements'], ['/clinic/audit', 'Audit log']],
-  physician: [['/clinic', 'Certificates']],
-  admin: [['/clinic/admin', 'Staff access'], ['/clinic/audit', 'Audit log']]
+  nurse: [['/clinic', 'Clinic desk'], ['/clinic/calendar', 'Calendar'], ['/clinic/slots', 'Open slots'], ['/clinic/announcements', 'Announcements'], ['/clinic/audit', 'Audit log'], ['/clinic/account', 'Account']],
+  physician: [['/clinic', 'Certificates'], ['/clinic/account', 'Account']],
+  admin: [['/clinic/admin', 'Staff access'], ['/clinic/audit', 'Audit log'], ['/clinic/account', 'Account']]
 };
 const studentLinks = [
   ['home', '/clinic', 'Home', 'home'], ['book', '/clinic/book', 'Book an Appointment', 'book'],
