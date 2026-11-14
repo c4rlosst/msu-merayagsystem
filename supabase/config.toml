@@ -22,3 +22,11 @@ enable_confirmations = true
 [storage]
 enabled = true
 file_size_limit = "5MiB"
+
+[auth.email.template.magic_link]
+subject = "Your MERAYAG verification code"
+content_path = "./supabase/templates/verification.html"
+
+[auth.email.template.confirmation]
+subject = "Verify your MERAYAG account"
+content_path = "./supabase/templates/verification.html"

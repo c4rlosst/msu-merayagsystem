@@ -71,7 +71,7 @@ export default async function Clinic({ params, searchParams }) {
     </aside>
     <main id="clinic-content" className="workspace">
       <div className="account no-print">{user.email}</div>
-      {content}
+      <div key={section.join('/') || 'home'} className="menu-content">{content}</div>
     </main>
   </div>;
 }

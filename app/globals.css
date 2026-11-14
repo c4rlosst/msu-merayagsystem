@@ -214,3 +214,44 @@ th,td{padding:.7rem;vertical-align:top;border-bottom:1px solid var(--line)}
 @media(max-width:1000px){.clinic-shell{grid-template-columns:14rem minmax(0,1fr)}.home-columns{grid-template-columns:1fr}.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.clinic-shell{display:block}.sidebar{border-left:0}.workspace{padding:1rem 1rem 3rem}.account{margin-bottom:1.5rem}.profile-prompt{padding:1rem}.clinic-intro{padding:1.3rem!important}}
 @media print{.clinic-shell{display:block;background:white}.workspace{padding:0;max-width:none}}
+
+/* Keep the sidebar anchored while the selected menu arrives. */
+.menu-content {
+  animation: menu-enter 320ms cubic-bezier(.22, 1, .36, 1) both;
+}
+@keyframes menu-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.sidebar nav a,
+button,
+.button,
+.visit-row,
+.choice,
+.quick-actions a,
+.metric {
+  transition: background-color 180ms ease, border-color 180ms ease,
+    box-shadow 180ms ease, transform 180ms cubic-bezier(.22, 1, .36, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .sidebar nav a:hover { background-color: #f7f2f6; transform: translateX(3px); }
+  .sidebar nav a[aria-current]:hover { background-color: #fcecc0; }
+  button:not(:disabled):hover,
+  .button:hover { transform: translateY(-2px); box-shadow: 0 5px 12px #61194318; }
+  a.visit-row:hover { transform: translateY(-2px); border-color: #bda4b5; }
+  .choice:hover { border-color: #bda4b5; }
+  .quick-actions a:hover { transform: translateX(3px); }
+  .metric:hover { transform: translateY(-3px); border-color: #cdbaca; }
+}
+button:not(:disabled):active,
+.button:active { transform: translateY(0) scale(.98); }
+@media (prefers-reduced-motion: reduce) {
+  .menu-content { animation: none; }
+  .sidebar nav a, button, .button, .visit-row, .choice, .quick-actions a, .metric {
+    transition: none;
+    transform: none !important;
+  }
+}
+@media print {
+  .menu-content { animation: none; }
+}

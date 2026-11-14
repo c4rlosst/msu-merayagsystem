@@ -22,7 +22,8 @@ export async function signIn(_, form) {
   if (!email.success) return { error: 'Enter a valid school email address.' };
   const code = String(form.get('code') ?? '').trim();
   if (code && !/^\d{6,10}$/.test(code)) return { email: email.data, error: 'Enter the code from your school email.' };
-  const domains = (process.env.CLINIC_SCHOOL_DOMAINS ?? '').split(',').map((domain) => domain.trim().toLowerCase());
+  const domains = (process.env.CLINIC_SCHOOL_DOMAINS ?? 'msugensan.edu.ph')
+    .split(',').map((domain) => domain.trim().toLowerCase());
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PUBLISHABLE_KEY || !process.env.SUPABASE_SERVICE_ROLE_KEY || Buffer.from(process.env.CLINIC_SESSION_KEY ?? '', 'base64').length !== 32) {
     return { error: 'Clinic sign-in is being configured. Try again later.' };
   }

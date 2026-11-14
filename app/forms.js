@@ -25,8 +25,8 @@ export function LoginForm({ signup = false }) {
   </form>;
 }
 
-export function BookingForm({ groups, reasons }) {
-  const [state, dispatch, pending] = useActionState(submitBooking, {});
+export function BookingForm({ groups, reasons, preview = false }) {
+  const [state, dispatch, pending] = useActionState(preview ? async () => ({ message: 'Preview complete. This sample request has not been sent to the clinic.' }) : submitBooking, {});
   const [day, setDay] = useState(groups[0]?.key);
   const [slot, setSlot] = useState('');
   const [reason, setReason] = useState('');
@@ -56,7 +56,8 @@ export function BookingForm({ groups, reasons }) {
         <small>JPG, PNG, or PDF. Up to 5 MB.</small>
       </label>
       {state.error && <p className="error" role="alert">{state.error}</p>}
-      <button disabled={pending}>{pending ? 'Booking…' : 'Request appointment'}</button>
+      <button disabled={pending}>{pending ? 'Booking…' : preview ? 'Preview request' : 'Request appointment'}</button>
+      {state.message && <p role="status">{state.message}</p>}
     </section>
   </form>;
 }
@@ -64,4 +65,3 @@ export function BookingForm({ groups, reasons }) {
 export function PrintButton() {
   return <button className="no-print" onClick={() => window.print()}>Print certificate</button>;
 }
-
