@@ -3,11 +3,11 @@ import { useState } from 'react';
 import { BookingForm } from '../forms.js';
 import { reasons } from '../../lib/clinic.js';
 
-export function PreviewBooking({ groups }) {
+export function PreviewBooking() {
   const [ready, setReady] = useState(false);
   return <>
-    <header className="page-heading"><h1>Book an appointment</h1><p>Choose a sample clinic time and try the request form.</p></header>
-    {ready ? <><p className="preview-note">Sample availability for preview.</p><BookingForm groups={groups} reasons={reasons} preview /></> :
+    <header className="page-heading"><h1>Book an appointment</h1><p>Tell the nurse how soon you need a visit.</p></header>
+    {ready ? <BookingForm reasons={reasons} preview /> :
       <section className="profile-prompt"><h2>Complete your student details first</h2><p>The clinic uses your student ID to match your visit to your record.</p>
         <form className="paper form-stack" onSubmit={(event) => { event.preventDefault(); setReady(true); }}>
           <h2>Personal information</h2>

@@ -19,7 +19,7 @@ async function limited(scope, value) {
 
 export async function signIn(nurse, _, form) {
   const nurseId = String(form.get('nurse_id') ?? '').trim().toUpperCase();
-  if (nurse && !/^N[0-9]{2,8}$/.test(nurseId)) return { error: 'Enter your nurse ID, such as N01.' };
+  if (nurse && !/^N-?[0-9]{2,8}$/.test(nurseId)) return { error: 'Enter your nurse ID, such as N-01.' };
   const email = emailField.safeParse(nurse
     ? nurseAccount(nurseId)
     : String(form.get('email') ?? '').trim().toLowerCase());
@@ -109,14 +109,14 @@ export async function manageStaffAccess(_, form) {
 }
 
 function nurseAccount(id) {
-  return id.toLowerCase() + '@nurses.merayag.invalid';
+  return id.replace('-', '').toLowerCase() + '@nurses.merayag.invalid';
 }
 
 export async function createNurseAccount(_, form) {
   const { db } = await requireRole('admin');
   const id = String(form.get('nurse_id') ?? '').trim().toUpperCase();
   const password = form.get('password');
-  if (!/^N[0-9]{2,8}$/.test(id)) return { error: 'Enter a nurse ID such as N01.' };
+  if (!/^N-?[0-9]{2,8}$/.test(id)) return { error: 'Enter a nurse ID such as N-01.' };
   if (typeof password !== 'string' || password.length < 6 || Buffer.byteLength(password, 'utf8') > 72) {
     return { error: 'Use a password with at least 6 characters and at most 72 bytes.' };
   }
@@ -139,7 +139,7 @@ const profile = z.object({
   course: z.string().trim().min(1).max(120), year_level: z.coerce.number().int().min(1).max(20),
   contact_number: z.string().trim().regex(/^[+\d(). -]{7,40}$/)
 });
-const booking = z.object({ slot: uid, reason: z.enum(reasons), concern: z.string().trim().min(1).max(4000) });
+const booking = z.object({ urgency: z.enum(['urgent', 'soon', 'flexible']), reason: z.enum(reasons), concern: z.string().trim().min(1).max(4000) });
 
 async function uploadLetter(user, file, required) {
   if (!(file instanceof File) || !file.size) {
@@ -166,17 +166,17 @@ async function uploadLetter(user, file, required) {
 export async function submitBooking(_, form) {
   const { db, user } = await requireRole('student');
   const input = booking.safeParse(Object.fromEntries(form));
-  if (!input.success) return { error: 'Choose an available time and visit reason, then enter your concern.' };
+  if (!input.success) return { error: 'Choose an urgency level and visit reason, then enter your concern.' };
   if (await limited('booking', user.id)) return { error: 'Too many booking attempts. Try again in a minute.' };
-  const { slot, reason, concern } = input.data;
+  const { urgency, reason, concern } = input.data;
   let upload;
   try {
     upload = await uploadLetter(user, form.get('letter'), reason === 'Medical certificate');
   } catch (error) {
     return { error: error.message };
   }
-  const { data, error } = await db.rpc('book_clinic_appointment', {
-    selected_slot: slot, visit_reason: reason, student_concern: concern, ...upload.payload
+  const { data, error } = await db.rpc('request_clinic_appointment', {
+    requested_urgency: urgency, visit_reason: reason, student_concern: concern, ...upload.payload
   }).single();
   if (error || !data) {
     if (upload.path && error?.code) {
@@ -185,7 +185,7 @@ export async function submitBooking(_, form) {
       if (linked) redirect(detail(linked.appointment_id));
       if (!lookupError && /^[0-9A-Z]{5}$/.test(error.code)) await upload.bucket.remove([upload.path]);
     }
-    return { error: safeError(error, 'Booking could not be confirmed. Check My appointments before trying again.') };
+    return { error: safeError(error, 'Your request could not be submitted. Check My appointments before trying again.') };
   }
   redirect(detail(data.id));
 }
@@ -204,7 +204,7 @@ const textVisit = ['findings', 'assessment', 'notes'];
 export async function clinicAction(kind, _, form) {
   const roles = {
     profile: ['student'], schedule: ['nurse'], edit_schedule: ['nurse'], cancel_schedule: ['nurse'],
-    status: ['student', 'nurse'], visit: ['nurse'], authorize: ['physician'], release: ['nurse']
+    assign_time: ['nurse'], status: ['student', 'nurse'], visit: ['nurse'], authorize: ['physician'], release: ['nurse']
   };
   if (!Object.hasOwn(roles, kind)) return { error: 'This action is unavailable.' };
   const { db, user } = await requireRole(...roles[kind]);
@@ -230,6 +230,18 @@ export async function clinicAction(kind, _, form) {
     const id = fields.id;
     destination = detail(id);
     switch (kind) {
+      case 'assign_time': {
+        const time = z.object({
+          date: z.iso.date(), start: z.iso.time({ precision: -1 }), end: z.iso.time({ precision: -1 })
+        }).safeParse(fields);
+        if (!time.success) return { error: 'Choose a date and enter a start and end time.' };
+        const { date, start, end } = time.data;
+        result = await db.rpc('schedule_clinic_request', {
+          appointment_key: id, visit_start: date + 'T' + start + ':00+08:00',
+          visit_end: date + 'T' + end + ':00+08:00'
+        });
+        break;
+      }
       case 'cancel_schedule': {
         const reason = z.string().trim().min(1).max(1000).safeParse(fields.explanation);
         if (!reason.success) return { error: 'Enter a cancellation reason.' };

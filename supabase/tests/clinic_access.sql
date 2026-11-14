@@ -23,9 +23,12 @@ select set_config('clinic_test.slot', (
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
 select set_config('clinic_test.appointment', id::text, true)
-from public.book_clinic_appointment(
-  current_setting('clinic_test.slot')::uuid, 'General check-up', 'Synthetic concern for tests'
+from public.request_clinic_appointment(
+  'urgent', 'General check-up', 'Synthetic concern for tests'
 );
+
+select set_config('clinic_test.second', id::text, true)
+from public.request_clinic_appointment('flexible', 'Dental appointment', 'Test');
 
 do $$
 begin
@@ -66,21 +69,10 @@ begin
      or exists (select 1 from public.profiles where student_id = 'test-student-one') then
     raise exception 'Student can read another student''s records';
   end if;
-  begin
-    perform public.book_clinic_appointment(current_setting('clinic_test.slot')::uuid, 'Dental appointment', 'Test');
-    raise exception 'An already full slot accepted another booking';
-  exception when raise_exception then
-    if sqlerrm <> 'This time is no longer available. Choose another slot' then
-      raise;
-    end if;
-  end;
 end;
 $$;
 
-select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
-select public.change_clinic_appointment_status(current_setting('clinic_test.appointment')::uuid, 'cancelled');
-select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000002', true);
-select * from public.book_clinic_appointment(current_setting('clinic_test.slot')::uuid, 'Dental appointment', 'Test');
+
 
 do $$
 begin
@@ -100,21 +92,25 @@ $$;
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000003', true);
 do $$
 declare
-  schedule_key uuid := (select schedule_id from public.slots where id = current_setting('clinic_test.slot')::uuid);
+  start_time timestamptz := (select starts_at from public.slots where id = current_setting('clinic_test.slot')::uuid);
+  end_time timestamptz := start_time + interval '30 minutes';
 begin
-  begin
-    perform public.edit_clinic_schedule(schedule_key, time '09:00', time '09:30', 30::smallint, 1::smallint);
-    raise exception 'An edit moved an active booking';
-  exception when raise_exception then
-    if sqlerrm <> 'Keep booked times and enough capacity for their existing requests' then raise; end if;
-  end;
-  perform public.cancel_clinic_schedule(schedule_key, 'Clinic closed');
-  if exists (
-    select 1 from public.appointments where slot_id = current_setting('clinic_test.slot')::uuid
-      and status <> 'cancelled'
+  perform public.schedule_clinic_request(current_setting('clinic_test.appointment')::uuid, start_time, end_time);
+  if not exists (
+    select 1 from public.appointments
+    where id = current_setting('clinic_test.appointment')::uuid
+      and status = 'confirmed' and requested_start = start_time and urgency = 'urgent'
   ) then
-    raise exception 'Schedule cancellation left an active booking';
+    raise exception 'The nurse could not confirm the requested appointment';
   end if;
+  begin
+    perform public.schedule_clinic_request(current_setting('clinic_test.second')::uuid, start_time, end_time);
+    raise exception 'An overlapping appointment was confirmed';
+  exception when raise_exception then
+    if sqlerrm <> 'That time overlaps an existing visit. Choose another time' then raise; end if;
+  end;
+  perform public.change_clinic_appointment_status(current_setting('clinic_test.appointment')::uuid, 'cancelled');
+  perform public.schedule_clinic_request(current_setting('clinic_test.second')::uuid, start_time, end_time);
 end;
 $$;
 
@@ -146,7 +142,8 @@ select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000004
 select public.read_clinic_visit('00000000-0000-4000-8000-000000000011');
 select public.authorize_clinic_certificate('00000000-0000-4000-8000-000000000011', 'Synthetic certificate statement');
 
-select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000001', true);
+
+
 do $$
 begin
   if exists (select 1 from public.certificates where appointment_id = '00000000-0000-4000-8000-000000000011') then

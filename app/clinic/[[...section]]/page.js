@@ -1,8 +1,9 @@
+import { NurseCalendar } from '../../../lib/nurse-calendar.js';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { z } from 'zod';
 import { requireRole } from '../../../lib/session.js';
-import { clinicDate, reasons, statuses } from '../../../lib/clinic.js';
+import { clinicDate, reasons, statuses, urgencyLabels } from '../../../lib/clinic.js';
 import { AppointmentList } from '../../../lib/appointment-list.js';
 import { StudentDashboard } from '../../../lib/student-dashboard.js';
 import { clinicAction, createNurseAccount, manageStaffAccess, signOut } from '../../actions.js';
@@ -11,7 +12,7 @@ import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
 const roleNames = { student: 'Student', nurse: 'Nurse', physician: 'Physician', admin: 'Administrator' };
 const links = {
   student: [['/clinic', 'Home'], ['/clinic/book', 'Book'], ['/clinic/appointments', 'My appointments'], ['/clinic/profile', 'My profile']],
-  nurse: [['/clinic', 'Clinic desk'], ['/clinic/audit', 'Audit log']],
+  nurse: [['/clinic', 'Clinic desk'], ['/clinic/calendar', 'Calendar'], ['/clinic/audit', 'Audit log']],
   physician: [['/clinic', 'Certificates']],
   admin: [['/clinic/admin', 'Staff access'], ['/clinic/audit', 'Audit log']]
 };
@@ -50,12 +51,14 @@ export default async function Clinic({ params, searchParams }) {
     content = await Book({ db, user });
   } else if (section.length === 1 && screen === 'profile' && role === 'student') {
     content = await Profile({ db, user });
+  } else if (section.length === 1 && screen === 'calendar' && role === 'nurse') {
+    content = await NurseCalendar({ db, filters: await searchParams });
   } else if (section.length === 1 && screen === 'releases' && role === 'nurse') {
     content = await ReleaseQueue({ db });
   } else if (section.length === 1 && screen === 'audit' && ['nurse', 'admin'].includes(role)) {
     content = await Audit({ db, filters: await searchParams });
   } else if (section.length === 2 && screen === 'appointment' && validId && ['student', 'nurse', 'physician'].includes(role)) {
-    content = await Appointment({ db, role, id });
+    content = await Appointment({ db, role, id, filters: await searchParams });
   } else if (section.length === 2 && screen === 'certificate' && validId && role === 'student') {
     content = await Certificate({ db, id });
   }
@@ -85,7 +88,7 @@ async function AdminDesk({ db }) {
     <ActionForm action={createNurseAccount} label="Add nurse" className="paper form-stack">
       <h2>Create a nurse account</h2>
       <div className="field-grid">
-        <label>Nurse ID<input name="nurse_id" placeholder="N01" maxLength={9} required /></label>
+        <label>Nurse ID<input name="nurse_id" placeholder="N-01" maxLength={10} required /></label>
         <label>Password<input type="password" name="password" autoComplete="new-password" minLength={6} maxLength={72} required />
           <small>Use at least 6 characters.</small>
         </label>
@@ -105,7 +108,7 @@ async function AdminDesk({ db }) {
       <div className="table-scroll"><table>
         <thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Access</th><th scope="col">Action</th></tr></thead>
         <tbody>{staff.map((member) => <tr key={member.email}>
-          <td>{member.email?.endsWith('@nurses.merayag.invalid') ? member.email.split('@')[0].toUpperCase() : member.email}</td><td>{roleNames[member.role]}</td>
+          <td>{member.email?.endsWith('@nurses.merayag.invalid') ? member.email.split('@')[0].toUpperCase().replace(/^N-?/, 'N-') : member.email}</td><td>{roleNames[member.role]}</td>
           <td><span className={member.active ? 'badge confirmed' : 'badge cancelled'}>{member.active ? 'Active' : 'Revoked'}</span></td>
           <td>{member.role !== 'admin' && <ActionForm action={manageStaffAccess} label={member.active ? 'Revoke access' : 'Restore access'}>
             <input type="hidden" name="email" value={member.email} />
@@ -136,74 +139,39 @@ async function Profile({ db, user }) {
 
 async function Book({ db, user }) {
   const profile = checked(await db.from('profiles').select('user_id').eq('user_id', user.id).maybeSingle());
-  if (!profile) return <><Heading title="Book an appointment">Choose a published clinic time after completing your student details.</Heading><section className="profile-prompt"><h2>Complete your student details first</h2><p>The clinic uses your student ID to match your visit to your record.</p>{await Profile({ db, user })}</section></>;
-  const slots = checked(await db.from('slots').select('id, starts_at, capacity, held_count').order('starts_at').limit(1000));
-  const byDay = new Map();
-  for (const slot of slots) {
-    const remaining = slot.capacity - slot.held_count;
-    if (remaining <= 0) continue;
-    const day = clinicDate(slot.starts_at, { dateStyle: 'full' });
-    if (!byDay.has(day)) byDay.set(day, { key: day, label: day, slots: [] });
-    byDay.get(day).slots.push({ id: slot.id, remaining, label: clinicDate(slot.starts_at, { timeStyle: 'short' }) });
-  }
-  return <><Heading title="Book an appointment">Choose a published time, then tell the clinic what brings you in.</Heading>
-    {byDay.size ? <BookingForm groups={[...byDay.values()]} reasons={reasons} /> :
-      <Empty>There are no open times right now. Check again after the clinic publishes its next schedule.</Empty>}</>;
+  if (!profile) return <><Heading title="Book an appointment">Complete your student details before requesting a visit.</Heading><section className="profile-prompt"><h2>Complete your student details first</h2><p>The clinic uses your student ID to match your visit to your record.</p>{await Profile({ db, user })}</section></>;
+  return <><Heading title="Request an appointment">Tell us what brings you in and how soon you need a visit. The nurse will choose your date and time.</Heading>
+    <BookingForm reasons={reasons} /></>;
 }
 
 async function Appointments({ db }) {
-  const appointments = checked(await db.from('appointments').select('id, reference_number, reason, status, requested_start').order('requested_start', { ascending: false }).limit(100));
+  const appointments = checked(await db.from('appointments').select('id, reference_number, reason, status, requested_start').order('created_at', { ascending: false }).limit(100));
   return <AppointmentList appointments={appointments} />;
 }
 
 function AppointmentRow({ appointment }) {
   return <Link className="visit-row" href={appointmentLink(appointment.id)}>
-    <time dateTime={appointment.requested_start}>{clinicDate(appointment.requested_start)}</time>
+    <time dateTime={appointment.requested_start}>{appointment.requested_start ? clinicDate(appointment.requested_start) : urgencyLabels[appointment.urgency]}</time>
     <span><strong>{appointment.reason}</strong><small>{appointment.reference_number}</small></span>
     <Badge status={appointment.status} />
   </Link>;
 }
 
-function ScheduleFields({ schedule }) {
-  return <div className="field-grid">
-    {schedule ? <input type="hidden" name="id" value={schedule.id} /> : <label>Clinic date<input name="date" type="date" required /></label>}
-    <label>Opens<input name="opening" type="time" defaultValue={schedule?.opens_at.slice(0, 5)} required /></label>
-    <label>Closes<input name="closing" type="time" defaultValue={schedule?.closes_at.slice(0, 5)} required /></label>
-    <label>Slot length (minutes)<input name="slot_length" type="number" min="1" max="720" defaultValue={schedule?.slot_minutes ?? 30} required /></label>
-    <label>Places per slot<input name="slot_capacity" type="number" min="1" max="32767" defaultValue={schedule?.capacity ?? 3} required /></label>
-  </div>;
-}
-
 async function NurseDesk({ db }) {
-  const [schedules, appointments] = (await Promise.all([
-    db.from('schedules').select('id, clinic_date, opens_at, closes_at, slot_minutes, capacity, cancelled_at').order('clinic_date', { ascending: false }).limit(50),
-    db.from('appointments').select('id, reference_number, reason, status, requested_start')
-      .in('status', ['pending', 'confirmed', 'checked_in']).order('requested_start').limit(150)
+  const columns = 'id, reference_number, reason, status, urgency, requested_start';
+  const [requests, visits] = (await Promise.all([
+    db.from('appointments').select(columns).eq('status', 'pending').order('urgency').order('created_at'),
+    db.from('appointments').select(columns).in('status', ['confirmed', 'checked_in']).order('requested_start')
   ])).map(checked);
   const today = clinicDate(Date.now(), { dateStyle: 'short' });
-  const requests = appointments.filter((appointment) => appointment.status === 'pending');
-  const visits = appointments.filter((appointment) => appointment.status !== 'pending');
-  const todaysVisits = visits.filter((appointment) => clinicDate(appointment.requested_start, { dateStyle: 'short' }) === today);
-  const otherVisits = visits.filter((appointment) => !todaysVisits.includes(appointment));
-  return <><Heading title="Clinic desk">Review requests, check students in, and publish clinic hours.</Heading>
-    <nav className="section-nav" aria-label="Clinic desk"><a href="#visits">Today’s visits</a><a href="#requests">Pending requests</a><a href="#schedules">Schedules</a><Link href="/clinic/releases">Certificate releases</Link></nav>
-    <section id="visits"><h2>Today’s visits</h2>{todaysVisits.length ? todaysVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />) : <Empty>No confirmed or checked-in visits today.</Empty>}</section>
-    {otherVisits.length > 0 && <section><h2>Other active visits</h2>{otherVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</section>}
-    <section id="requests"><h2>Pending requests</h2>{requests.length ? requests.map((a) => <AppointmentRow key={a.id} appointment={a} />) : <Empty>New student requests will appear here.</Empty>}</section>
-    <section id="schedules"><h2>Publish clinic hours</h2>
-      <ActionForm action={clinicAction.bind(null, 'schedule')} label="Publish schedule" className="paper form-stack"><ScheduleFields /></ActionForm>
-      <h3>Published schedules</h3>
-      {schedules.length ? schedules.map((schedule) => <details className="paper" key={schedule.id}>
-        <summary>{schedule.clinic_date} · {schedule.opens_at.slice(0, 5)}–{schedule.closes_at.slice(0, 5)}{schedule.cancelled_at && ' · Cancelled'}</summary>
-        {!schedule.cancelled_at && <>
-          <ActionForm action={clinicAction.bind(null, 'edit_schedule')} label="Save schedule" className="form-stack"><ScheduleFields schedule={schedule} /></ActionForm>
-          <ActionForm action={clinicAction.bind(null, 'cancel_schedule')} label="Cancel schedule" className="form-stack">
-            <input type="hidden" name="id" value={schedule.id} />
-            <label>Reason shown to affected students<input name="explanation" maxLength={1000} required /></label>
-          </ActionForm>
-        </>}
-      </details>) : <Empty>Publish clinic hours to make times available to students.</Empty>}
-    </section></>;
+  const todaysVisits = visits.filter((visit) => clinicDate(visit.requested_start, { dateStyle: 'short' }) === today);
+  const earlierVisits = visits.filter((visit) => Date.parse(visit.requested_start) < Date.now() && !todaysVisits.includes(visit));
+  return <><Heading title="Clinic desk">Review pending requests and schedule visits on the clinic calendar.</Heading>
+    <nav className="section-nav" aria-label="Clinic desk"><Link href="/clinic/calendar">Appointment calendar</Link><Link href="/clinic/releases">Certificate releases</Link></nav>
+    <section><h2>Pending requests</h2>{requests.length ? requests.map((a) => <AppointmentRow key={a.id} appointment={a} />) : <Empty>New student requests will appear here.</Empty>}</section>
+    <section><h2>Today’s visits</h2>{todaysVisits.length ? todaysVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />) : <Empty>No confirmed or checked-in visits today.</Empty>}</section>
+    {earlierVisits.length > 0 && <section><h2>Earlier visits to close</h2>{earlierVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</section>}
+  </>;
 }
 
 function StatusForm({ id, status, label, denial = false }) {
@@ -250,7 +218,7 @@ async function PhysicianQueue({ db }) {
     </Link>) : <Empty>Completed medical certificate visits will appear here.</Empty>}</>;
 }
 
-async function Appointment({ db, role, id }) {
+async function Appointment({ db, role, id, filters }) {
   if (role === 'physician') {
     const item = checked(await db.rpc('list_clinic_certificate_queue')).find((entry) => entry.appointment_id === id);
     if (!item) notFound();
@@ -276,9 +244,9 @@ async function Appointment({ db, role, id }) {
   }
   return <><Heading title={item.reason}>{item.reference_number}</Heading>
     <section className="paper"><Badge status={item.status} />
-      <dl className="facts"><div><dt>Visit time</dt><dd>{clinicDate(item.requested_start)}</dd></div>
+      <dl className="facts"><div><dt>Visit time</dt><dd>{item.requested_start ? clinicDate(item.requested_start) : 'Awaiting nurse scheduling'}</dd></div>
         {student && <div><dt>Student</dt><dd>{student.full_name} · {student.student_number}</dd></div>}
-        <div><dt>Concern</dt><dd>{item.concern}</dd></div>
+        <div><dt>Urgency</dt><dd>{urgencyLabels[item.urgency]}</dd></div><div><dt>Concern</dt><dd>{item.concern}</dd></div>
         {item.decision_reason && <div><dt>Clinic response</dt><dd>{item.decision_reason}</dd></div>}
       </dl>
       {letter && <a href={'/letters/' + id} target="_blank" rel="noreferrer">Open referral or excuse letter</a>}
@@ -288,7 +256,7 @@ async function Appointment({ db, role, id }) {
     {role === 'student' && ['pending', 'confirmed'].includes(item.status) && <StatusForm id={id} status="cancelled" label="Cancel appointment" />}
     {role === 'student' && certificate?.status === 'released' && <Link className="button" href={'/clinic/certificate/' + id}>View medical certificate</Link>}
     {role === 'nurse' && item.status === 'pending' && <section className="paper form-stack"><h2>Review request</h2>
-      <StatusForm id={id} status="confirmed" label="Confirm appointment" /><StatusForm id={id} status="denied" label="Deny appointment" denial />
+      {await NurseCalendar({ db, filters, appointmentId: id })}<StatusForm id={id} status="denied" label="Deny appointment" denial />
     </section>}
     {role === 'nurse' && item.status === 'confirmed' && <section className="paper form-stack"><h2>Visit arrival</h2>
       <StatusForm id={id} status="checked_in" label="Check in student" />
@@ -370,7 +338,7 @@ async function ReleaseQueue({ db }) {
 
 async function StudentHome({ db, user }) {
   const [appointments, profile, certificates] = (await Promise.all([
-    db.from('appointments').select('id, reference_number, reason, status, requested_start').order('requested_start', {ascending:false}),
+    db.from('appointments').select('id, reference_number, reason, status, requested_start').order('created_at', {ascending:false}),
     db.from('profiles').select('full_name').eq('user_id',user.id).maybeSingle(),
     db.from('certificates').select('appointment_id').eq('status','released')
   ])).map(checked);
