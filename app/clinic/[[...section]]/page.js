@@ -6,17 +6,10 @@ import { requireRole } from '../../../lib/session.js';
 import { clinicDate, reasons, statuses, urgencyLabels } from '../../../lib/clinic.js';
 import { AppointmentList } from '../../../lib/appointment-list.js';
 import { StudentDashboard } from '../../../lib/student-dashboard.js';
-import { clinicAction, createNurseAccount, manageStaffAccess, signOut } from '../../actions.js';
+import { clinicAction, createNurseAccount, manageStaffAccess } from '../../actions.js';
 import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
 
 const roleNames = { student: 'Student', nurse: 'Nurse', physician: 'Physician', admin: 'Administrator' };
-const links = {
-  student: [['/clinic', 'Home'], ['/clinic/book', 'Book'], ['/clinic/appointments', 'My appointments'], ['/clinic/profile', 'My profile']],
-  nurse: [['/clinic', 'Clinic desk'], ['/clinic/calendar', 'Calendar'], ['/clinic/audit', 'Audit log']],
-  physician: [['/clinic', 'Certificates']],
-  admin: [['/clinic/admin', 'Staff access'], ['/clinic/audit', 'Audit log']]
-};
-
 function Heading({ title, children }) {
   return <header className="page-heading"><h1>{title}</h1>{children && <p>{children}</p>}</header>;
 }
@@ -64,21 +57,8 @@ export default async function Clinic({ params, searchParams }) {
   }
   if (!content) notFound();
 
-  return <div className="clinic-shell">
-    <a href="#clinic-content" className="skip-link">Skip to content</a>
-    <aside className="sidebar no-print">
-      <Link href="/clinic" className="brand"><span aria-hidden="true">✚</span> MERAYAG</Link>
-      <p className="role-label">{roleNames[role]} portal</p>
-      <nav aria-label="Clinic">{links[role].map(([href, label]) =>
-        <Link key={href} href={href} aria-current={href === (screen ? '/clinic/' + screen : role === 'admin' ? '/clinic/admin' : '/clinic') ? 'page' : undefined}>{label}</Link>
-      )}</nav>
-      <form action={signOut}><button className="quiet">Sign out</button></form>
-    </aside>
-    <main id="clinic-content" className="workspace">
-      <div className="account no-print">{user.email}</div>
-      <div key={section.join('/') || 'home'} className="menu-content">{content}</div>
-    </main>
-  </div>;
+  // The sidebar and page frame come from app/clinic/layout.js, so only this content changes between pages.
+  return <div key={section.join('/') || 'home'} className="menu-content">{content}</div>;
 }
 
 async function AdminDesk({ db }) {
@@ -229,18 +209,25 @@ async function Appointment({ db, role, id, filters }) {
         <label>Statement for the printed certificate<textarea name="text" maxLength={8000} rows={5} required /></label>
       </ActionForm></>;
   }
-  const item = checked(await db.from('appointments').select('*').eq('id', id).maybeSingle());
-  if (!item) notFound();
-  const [letter, certificate] = (await Promise.all([
+  // One round trip instead of four in a row: these lookups don't depend on each other. The record is
+  // checked first, so a missing or hidden appointment is still a 404 and never a database error.
+  const [itemResult, letterResult, certificateResult, extraResult] = await Promise.all([
+    db.from('appointments').select('*').eq('id', id).maybeSingle(),
     db.from('appointment_attachments').select('appointment_id').eq('appointment_id', id).maybeSingle(),
-    db.from('certificates').select('status, released_at').eq('appointment_id', id).maybeSingle()
-  ])).map(checked);
+    db.from('certificates').select('status, released_at').eq('appointment_id', id).maybeSingle(),
+    role === 'nurse' ? db.rpc('clinic_request_student', { appointment_key: id }) : db.rpc('clinic_appointment_history', { appointment_key: id })
+  ]);
+  const item = checked(itemResult);
+  if (!item) notFound();
+  const letter = checked(letterResult);
+  const certificate = checked(certificateResult);
+  const extra = checked(extraResult);
   let student, clinical, history;
   if (role === 'nurse') {
-    student = checked(await db.rpc('clinic_request_student', { appointment_key: id })).at(0);
+    student = extra.at(0);
     if (['checked_in', 'completed'].includes(item.status)) clinical = checked(await db.rpc('read_clinic_visit', { appointment_key: id }));
   } else {
-    history = checked(await db.rpc('clinic_appointment_history', { appointment_key: id }));
+    history = extra;
   }
   return <><Heading title={item.reason}>{item.reference_number}</Heading>
     <section className="paper"><Badge status={item.status} />
@@ -256,7 +243,7 @@ async function Appointment({ db, role, id, filters }) {
     {role === 'student' && ['pending', 'confirmed'].includes(item.status) && <StatusForm id={id} status="cancelled" label="Cancel appointment" />}
     {role === 'student' && certificate?.status === 'released' && <Link className="button" href={'/clinic/certificate/' + id}>View medical certificate</Link>}
     {role === 'nurse' && item.status === 'pending' && <section className="paper form-stack"><h2>Review request</h2>
-      {await NurseCalendar({ db, filters, appointmentId: id })}<StatusForm id={id} status="denied" label="Deny appointment" denial />
+      {await NurseCalendar({ db, filters, appointment: { id, urgency: urgencyLabels[item.urgency], reason: item.reason } })}<StatusForm id={id} status="denied" label="Deny appointment" denial />
     </section>}
     {role === 'nurse' && item.status === 'confirmed' && <section className="paper form-stack"><h2>Visit arrival</h2>
       <StatusForm id={id} status="checked_in" label="Check in student" />

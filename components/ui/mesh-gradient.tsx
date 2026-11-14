@@ -318,7 +318,7 @@ const UNIFORMS = {
   hue: 0.0000,
   vignette: 0.000,
   blur: 0.0000,
-  grain: 0.035,
+  grain: 0.02,
   seed: 1.0,
   rotate: 1.2915,
   offsetX: 0.000,
@@ -442,12 +442,14 @@ export function ShaderBackground({ className }: { className?: string }) {
     const timeAnimated = Math.abs(timeScale) > 0.0001
 
     const resizeCanvas = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      // A soft gradient doesn't need sharp pixels: drawing at ~0.35 megapixels and letting the browser
+      // scale it up looks the same, and is several times cheaper for the graphics card.
+      const dpr = Math.min(window.devicePixelRatio || 1, 1)
       const rawWidth = Math.max(1, Math.round(bounds.width * dpr))
       const rawHeight = Math.max(1, Math.round(bounds.height * dpr))
       const pixelScale = Math.min(
         1,
-        Math.sqrt(2_000_000 / Math.max(1, rawWidth * rawHeight)),
+        Math.sqrt(350_000 / Math.max(1, rawWidth * rawHeight)),
       )
       const width = Math.max(1, Math.round(rawWidth * pixelScale))
       const height = Math.max(1, Math.round(rawHeight * pixelScale))
@@ -538,9 +540,16 @@ export function ShaderBackground({ className }: { className?: string }) {
     }
     document.addEventListener("visibilitychange", onVisibilityChange)
 
+    let lastDraw = 0
     const render = (now: number) => {
       raf = 0
       if (disposed || !visible || !inView) return
+      // Cap at ~30 frames a second: the slow drift looks identical and the work is halved.
+      if (timeAnimated && now - lastDraw < 32) {
+        requestRender()
+        return
+      }
+      lastDraw = now
       const dt = lastNow === null ? 0 : Math.min((now - lastNow) / 1000, 0.1)
       lastNow = now
       const follow = 1 - Math.exp(-12 * dt)

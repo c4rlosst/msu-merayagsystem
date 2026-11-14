@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { database, storageAdmin, saveSession, clearSession, requireRole } from '../lib/session.js';
 import { reasons } from '../lib/clinic.js';
+import { fetchBookings } from '../lib/bookings.js';
 
 const uid = z.uuid();
 const detail = (id) => '/clinic/appointment/' + id;
@@ -84,6 +85,21 @@ export async function signIn(nurse, _, form) {
   if (error || !data.session) return { email: email.data, error: 'That code is invalid or expired. Request a new code.' };
   await saveSession(data.session);
   redirect('/clinic');
+}
+
+// Lets the nurse calendar load more months in the background while the nurse moves around it,
+// instead of reloading the whole page for every week or month.
+export async function loadCalendarRange(from, to) {
+  const { db } = await requireRole('nurse');
+  const range = z.object({ from: z.iso.date(), to: z.iso.date() }).safeParse({ from, to });
+  if (!range.success) return { error: 'Choose a valid date range.' };
+  const days = (Date.parse(range.data.to) - Date.parse(range.data.from)) / 86400000;
+  if (!(days > 0 && days <= 130)) return { error: 'Choose a shorter date range.' };
+  try {
+    return { bookings: await fetchBookings(db, range.data.from, range.data.to) };
+  } catch {
+    return { error: 'Could not load the calendar. Try again.' };
+  }
 }
 
 export async function signOut() {
