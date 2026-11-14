@@ -29,8 +29,8 @@ export function ClinicShell({ role, email, name, detail, avatar, preview, childr
       <a href="#clinic-content" className="skip-link">Skip to content</a>
       <aside className="sidebar no-print">
         <Link href={preview ? '/preview' : '/clinic'} className="brand">
-          <Image src="/merayag-phoenix-crop.png" alt="" width={194} height={220} sizes="48px" className="brand-mark" priority />
-          <span>MERAYAG</span>
+          <Image src="/merayag-phoenix-panel.png" alt="" width={689} height={1000} sizes="48px" className="brand-mark" priority />
+          <span><b>MERAYAG</b><small>Student portal</small></span>
         </Link>
         <p className="menu-label">Main Menu</p>
         <nav aria-label="Clinic">{studentLinks.map(([key, href, label, icon]) =>
@@ -62,7 +62,7 @@ export function ClinicShell({ role, email, name, detail, avatar, preview, childr
         <Link key={href} href={href} aria-current={href === current ? 'page' : undefined}>{label}</Link>
       )}</nav>
       <div className="sidebar-foot">
-        <span title={email}>{email}</span>
+        <div className="staff-id" title={email}><b>{name ?? email}</b>{detail && <small>{detail}</small>}</div>
         <form action={signOut}><button className="quiet">Sign out</button></form>
       </div>
     </aside>

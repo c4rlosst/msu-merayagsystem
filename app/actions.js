@@ -133,12 +133,14 @@ export async function createNurseAccount(_, form) {
   const id = String(form.get('nurse_id') ?? '').trim().toUpperCase();
   const password = form.get('password');
   if (!/^N-?[0-9]{2,8}$/.test(id)) return { error: 'Enter a nurse ID such as N-01.' };
+  const name = z.string().trim().min(1).max(80).safeParse(form.get('full_name'));
+  if (!name.success) return { error: 'Enter the nurse’s full name.' };
   if (typeof password !== 'string' || password.length < 6 || Buffer.byteLength(password, 'utf8') > 72) {
     return { error: 'Use a password with at least 6 characters and at most 72 bytes.' };
   }
   const email = nurseAccount(id);
   const admin = storageAdmin().auth.admin;
-  const { data, error } = await admin.createUser({ email, password, email_confirm: true });
+  const { data, error } = await admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: name.data } });
   if (error || !data.user) return { error: 'Could not create the account. Check whether the nurse ID is already in use.' };
 
   const assignment = await db.rpc('manage_clinic_staff', {

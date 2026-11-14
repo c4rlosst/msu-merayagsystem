@@ -98,7 +98,6 @@ form,article,section{min-width:0}
 .badge.confirmed,.badge.completed,.badge.released{background:#d9eadf;color:#17452d}
 .badge.denied,.badge.cancelled,.badge.no_show{background:#f4dce3;color:#71132d}
 .badge.pending,.badge.awaiting_authorization{background:#fff0c9;color:#654300}
-.section-nav{display:flex;flex-wrap:wrap;gap:.75rem 1.4rem;margin-bottom:1.5rem}
 .workspace>section{margin-bottom:1.5rem}
 details summary{cursor:pointer;font-weight:700}
 details form{margin-top:1rem}
@@ -354,21 +353,12 @@ input[type=radio]{accent-color:var(--maroon)}
 .workspace .ticket .button:hover{background:#ffc43d}
 .ticket :focus-visible{outline-color:var(--signal)}
 
-/* Counts as one quiet line instead of four tiles */
-.tally{display:flex;flex-wrap:wrap;gap:.4rem 1.8rem;margin:0 0 1.5rem;padding:0 .2rem}
-.tally div{display:flex;align-items:baseline;gap:.45rem;margin:0}
-.tally dt{order:2;font-size:.9rem;color:var(--mute)}
-.tally dd{order:1;margin:0;font:700 1.2rem var(--heading);color:var(--wine);font-variant-numeric:tabular-nums}
-.tally .is-zero dd{color:#b4a7ad;font-weight:600}
 
 /* Filters, nav pills, detail lists, tables */
 .status-filters{display:flex;flex-wrap:wrap;gap:.45rem;margin-bottom:1.3rem}
 .workspace .status-filters button{min-height:2.1rem;padding:.2rem .9rem;background:#fff;color:var(--mute);border:1px solid var(--rule);font-size:.85rem;font-weight:600;text-transform:capitalize}
 .workspace .status-filters button:hover:not(:disabled){background:var(--tint);color:var(--text)}
 .workspace .status-filters button[aria-pressed=true]{background:var(--wine);color:#fff;border-color:var(--wine)}
-.section-nav{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.4rem}
-.workspace .section-nav a{padding:.45rem 1rem;border:1px solid #d9c2cb;border-radius:2rem;background:#fff;font-weight:600;text-decoration:none}
-.workspace .section-nav a:hover{background:var(--tint)}
 .facts div{border-top-color:var(--rule)}
 .facts dt{color:var(--mute);font-weight:600}
 .history{border-left:2px solid #e3cdd5}
@@ -542,9 +532,6 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .student-shell::before{content:"";position:fixed;left:0;top:0;bottom:0;width:18px;z-index:3;background:#7d1568 repeating-linear-gradient(135deg,#ffffff1c 0 3px,transparent 3px 8px)}
 
 .student-shell .sidebar{background:#fff;color:var(--text);border-right:1px solid var(--rule);padding:1.1rem .9rem 1rem}
-.student-shell .sidebar .brand{display:flex;align-items:center;gap:.55rem;padding:0 .3rem 1rem;border-bottom:1px solid var(--rule);color:#8a3a7e;font:inherit}
-.student-shell .brand-mark{width:2.7rem;height:auto}
-.student-shell .sidebar .brand span{font:italic 600 1.5rem Georgia,"Palatino Linotype","Times New Roman",serif;letter-spacing:.05em;color:#8a3a7e}
 .menu-label{margin:1.1rem 0 .3rem .5rem;font-size:.65rem;font-weight:600;color:#8b8f99}
 .student-shell .sidebar nav{gap:.25rem}
 .student-shell .sidebar nav a{display:flex;align-items:center;gap:.65rem;padding:.6rem .65rem;border-radius:.5rem;color:#8b8f99;font-size:.92rem;font-weight:650;white-space:nowrap}
@@ -568,36 +555,6 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .student-shell .workspace .button.plum{display:inline-flex;align-items:center;gap:.5rem}
 
 /* Home */
-.dash{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:2rem;align-items:start}
-.dash-main h1{margin:0 0 1.4rem;font-size:clamp(1.9rem,3vw,2.5rem)}
-.student-shell .dash-hero h2{margin:0 0 .5rem;font-size:clamp(1.3rem,2vw,1.6rem);line-height:1.25;color:#14101a}
-.dash-hero{max-width:34rem;margin-bottom:2rem}
-.dash-hero p{margin:0 0 1.1rem;font-size:.9rem;color:var(--text)}
-.stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.2rem 2rem;margin:0 0 1.8rem}
-.stat-grid div{position:relative;display:grid;gap:.05rem;margin:0}
-.stat-grid dt{font-size:.8rem;font-weight:700;color:#17131c}
-.stat-grid dd{margin:0;font:700 1.9rem/1.1 var(--heading);color:#17131c;font-variant-numeric:tabular-nums}
-.stat-grid small{font-size:.7rem;color:var(--mute)}
-.stat-icon{position:absolute;right:1.5rem;top:0;color:var(--maroon)}
-.history .appointment-empty{padding:2rem 0;text-align:center}
-.history .appointment-empty h3{color:#14101a}
-.dash-side{display:grid;gap:1.6rem}
-.next-card{padding:1rem 1.5rem;border-radius:1.2rem;background:#fff;box-shadow:0 4px 14px #00000026}
-.next-card .kicker{margin:0 0 .3rem;max-width:none;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon)}
-.student-shell .next-card h3{margin:0 0 .3rem;font-size:1.15rem;color:#14101a}
-.next-card p{margin:0 0 .5rem;font-size:.85rem;color:var(--text)}
-.next-card .next-time{display:inline-block;padding:.15rem .8rem;border-radius:2rem;background:var(--signal);color:#2a1c22;font-weight:700}
-.next-card .next-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .9rem;max-width:none}
-.quick h2,.announce h2{margin:0 0 .8rem;font-size:1.1rem}
-.quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}
-.workspace .quick-grid a{display:grid;justify-items:center;gap:.5rem;padding:1rem .5rem;border-radius:.8rem;background:#fff;box-shadow:0 2px 8px #0000001f;color:var(--maroon);font-size:.9rem;font-weight:700;text-align:center;text-decoration:none}
-.workspace .quick-grid a:hover{background:#faf2f8}
-.notice{display:flex;align-items:center;gap:.9rem;margin-bottom:.7rem;padding:.9rem 1.2rem;border-radius:1.4rem;background:var(--tint);color:var(--maroon)}
-.notice svg{flex:none}
-.notice strong{display:block;font-size:.78rem;text-transform:uppercase;color:#3a2f40}
-.workspace .notice p{margin:.1rem 0 0;font-size:.82rem;color:#3a2f40}
-.workspace .announce-empty{margin:0;font-size:.9rem}
-@media (max-width:1100px){.dash{grid-template-columns:minmax(0,1fr)}}
 
 /* Booking, themed like the design */
 .student-shell .workspace button.submit{min-height:2.6rem;padding:.4rem 1.5rem;background:var(--signal);color:#2a1c22;font-weight:600}
@@ -623,11 +580,9 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .notice-row .visit-what{gap:.15rem}
 .notice-row .visit-what>span:not(.visit-sub){color:var(--mute);font-size:.92rem}
 .workspace .notice-row .inline-form button{min-height:2.2rem;padding:.2rem .9rem;border-color:#d9c2cb;background:#fff;color:var(--maroon);font-size:.88rem}
-@media (max-width:860px){.student-shell{grid-template-columns:minmax(0,1fr)}.student-shell .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule)}.topbar{padding:.6rem 1rem}.quick-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:860px){.student-shell{grid-template-columns:minmax(0,1fr)}.student-shell .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule)}.topbar{padding:.6rem 1rem}}
 
 /* Student portal on phones: one tidy header row, a sideways-scrolling menu under it */
-.stat-grid dt{padding-right:2rem}
-.stat-icon{right:0}
 @media (max-width:860px){
   .student-shell .sidebar{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .8rem;padding:.7rem .9rem .5rem}
   .student-shell .sidebar .brand{flex:1;padding:0;border:0}
@@ -636,3 +591,125 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
   .student-shell .sidebar .signout button{width:auto;padding:.4rem .7rem}
   .student-shell .sidebar nav{order:3;width:100%}
 }
+
+/* ===================== Dashboards: student, nurse and admin share one set of parts =====================
+   Panels (white cards with a title), stat tiles with an icon chip, big action buttons, and a main
+   column beside a narrow side rail. The plum hero is the only loud element. */
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.workspace .kicker{margin:0 0 .4rem;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--maroon)}
+
+/* Hero (student home) */
+.workspace .hero{position:relative;isolation:isolate;overflow:clip;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(15rem,1fr);gap:1.4rem 2.2rem;align-items:center;margin-bottom:1.25rem;padding:clamp(1.3rem,3vw,2.2rem);border-radius:1.25rem;color:#fff;background:linear-gradient(135deg,#7d1568,#55073f)}
+.hero::after,.next-card::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:repeating-linear-gradient(135deg,#ffffff14 0 3px,transparent 3px 9px);-webkit-mask-image:linear-gradient(90deg,transparent 35%,#000);mask-image:linear-gradient(90deg,transparent 35%,#000)}
+.workspace .hero h1{margin:0 0 .6rem;font-size:clamp(1.7rem,3vw,2.3rem);color:#fff}
+.workspace .hero .hero-copy p{max-width:44ch;margin:0 0 1.3rem;font-size:.98rem;color:#f2dcec}
+.workspace .button.gold{display:inline-flex;align-items:center;gap:.5rem;background:var(--signal);color:#2a1c22}
+.workspace .button.gold:hover{background:#ffc43d}
+.hero-next{padding:1.1rem 1.3rem;border:1px solid #ffffff30;border-radius:1rem;background:#ffffff1f}
+.workspace .hero-next p{margin:0;max-width:none;color:#f2dcec}
+.workspace .hero-next .kicker{color:var(--signal)}
+.workspace .hero-next .hero-when{font:700 1.25rem/1.25 var(--heading);letter-spacing:-.02em;color:#fff}
+.workspace .hero-next .hero-time{display:inline-block;margin:.5rem 0;padding:.1rem .8rem;border-radius:2rem;background:var(--signal);color:#2a1c22;font-weight:700}
+.workspace .hero-next .hero-reason{font-size:.92rem}
+.workspace .hero-next .hero-meta{display:flex;flex-wrap:wrap;gap:.3rem 1rem;margin-top:.6rem;font-size:.85rem}
+.workspace .hero-next a{color:#fff;font-weight:600}
+
+/* Stat tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.9rem;margin:0 0 1.5rem}
+.tile{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"icon num" "icon label" "icon hint";align-items:center;column-gap:.75rem;margin:0;padding:.9rem .95rem;border:1px solid var(--rule);border-radius:1rem;background:#fff;box-shadow:0 1px 2px #2a1c220d}
+.tile dd{grid-area:num;margin:0;font:700 1.7rem/1.1 var(--heading);letter-spacing:-.03em;color:var(--wine);font-variant-numeric:tabular-nums}
+.tile dt{grid-area:label;font-size:.85rem;font-weight:600;color:var(--text)}
+.tile small{grid-area:hint;font-size:.75rem;color:var(--mute)}
+.tile-icon{grid-area:icon;display:grid;place-items:center;flex:none;width:2.4rem;height:2.4rem;border-radius:.75rem;background:var(--tint);color:var(--maroon)}
+.tile.is-zero dd{color:#b4a7ad}
+.tile.is-zero .tile-icon{background:#f1eef0;color:#a99ca2}
+.tile.is-alert .tile-icon{background:#fff3d1;color:#8a5a00}
+.tile.is-alert dd{color:#8a5a00}
+
+/* Main column beside a side rail (the rail comes first in the page, so it is on top on phones) */
+.desk{display:grid;grid-template-columns:minmax(0,1fr) 21rem;gap:1.25rem;align-items:start}
+.desk-main,.desk-rail{display:grid;gap:1.25rem;min-width:0}
+.desk-main{grid-column:1;grid-row:1}
+.desk-rail{grid-column:2;grid-row:1}
+.panel.desk-main{display:block}
+@media (max-width:1080px){.desk{grid-template-columns:minmax(0,1fr)}.desk-main,.desk-rail{grid-column:1;grid-row:auto}}
+
+/* Panels */
+.workspace .panel{margin:0;overflow:clip;border:1px solid var(--rule);border-radius:1.1rem;background:#fff;box-shadow:0 1px 2px #2a1c220d}
+.panel-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem 1.25rem .6rem}
+.workspace .panel-head h2{display:flex;align-items:center;gap:.55rem;margin:0;font-size:1.05rem}
+.count{min-width:1.5rem;padding:.05rem .5rem;border-radius:2rem;background:var(--tint);color:var(--maroon);font-size:.78rem;font-weight:700;text-align:center}
+.panel-head a{font-size:.88rem;font-weight:600;text-decoration:none}
+.panel-head a:hover{text-decoration:underline}
+.workspace .panel-empty{margin:0;max-width:none;padding:.3rem 1.25rem 1.3rem}
+.panel .rows{padding:0 .5rem .5rem}
+.workspace .panel a.visit-row,.workspace .panel div.visit-row{padding-inline:.75rem;border-radius:.7rem}
+.panel .appointment-empty{padding:.5rem .75rem 1.2rem}
+.workspace .panel-form{display:grid;gap:1rem;align-content:start;padding:1.25rem 1.3rem 1.4rem}
+.workspace .panel-form h2{margin:0}
+.workspace .panel-form p{margin:0;font-size:.9rem}
+.panel-form button{justify-self:start}
+
+/* Big action buttons */
+.actions{display:grid;gap:.6rem;padding:.3rem 1.25rem 1.25rem}
+.actions.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.actions.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.workspace .actions a{display:grid;justify-items:center;align-content:center;gap:.5rem;min-height:5.4rem;padding:.8rem .4rem;border:1px solid var(--rule);border-radius:.9rem;background:#fff;color:var(--maroon);font-size:.85rem;font-weight:650;line-height:1.2;text-align:center;text-decoration:none}
+.workspace .actions a:hover{border-color:#e3c3d6;background:var(--tint)}
+.workspace .actions a:hover .tile-icon{background:#fff}
+
+/* Next visit (nurse side rail) */
+.next-card{position:relative;isolation:isolate;overflow:clip;display:grid;gap:.15rem;justify-items:start;padding:1.3rem 1.4rem;border-radius:1.1rem;color:#fff;background:linear-gradient(150deg,var(--maroon),var(--wine))}
+.workspace .next-card .kicker{color:var(--signal)}
+.workspace .next-card h2{margin:0 0 .15rem;font-size:1.3rem;color:#fff}
+.workspace .next-card p{margin:0;font-size:.92rem;color:#f1d8e0}
+.workspace .next-card .next-when{font-weight:650;color:#fff}
+.workspace .next-card .button{margin-top:.9rem}
+
+/* Announcements (student) */
+.notices{display:grid;gap:.2rem;padding:0 .5rem .6rem}
+.notice{display:flex;align-items:flex-start;gap:.8rem;padding:.7rem .75rem;border-radius:.8rem}
+.notice .tile-icon{width:2.2rem;height:2.2rem;border-radius:.7rem}
+.notice strong{display:block;font-size:.92rem;color:var(--text)}
+.workspace .notice p{margin:.1rem 0 0;font-size:.85rem}
+
+/* Admin directory */
+.admin-table{background:transparent}
+.admin-table th,.admin-table td{padding:.75rem .6rem;vertical-align:middle}
+.admin-table th:first-child,.admin-table td:first-child{padding-left:1.25rem}
+.admin-table th:last-child,.admin-table td:last-child{padding-right:1.25rem;text-align:right}
+.admin-table td strong{display:block;font-weight:650}
+.admin-table td small{font-size:.8rem}
+.workspace .admin-table button{min-height:2.2rem;padding:.2rem .9rem;border-color:#d9c2cb;background:#fff;color:var(--maroon);font-size:.85rem}
+.workspace .admin-table button:hover:not(:disabled){background:var(--tint)}
+
+@media (max-width:860px){
+  .workspace .hero{grid-template-columns:minmax(0,1fr)}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:420px){.tile{grid-template-columns:minmax(0,1fr);grid-template-areas:"icon" "num" "label" "hint";row-gap:.2rem}.actions.cols-3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.actions .tile-icon,.notice .tile-icon{grid-area:auto}
+
+/* Logo and type follow the sign-in page: the phoenix emblem, a bold sans wordmark, tight bold headings */
+.student-shell .sidebar .brand{display:flex;align-items:center;gap:.7rem;padding:0 .3rem 1rem;border-bottom:1px solid var(--rule);color:var(--wine);font:inherit}
+.student-shell .brand-mark{width:2.1rem;height:auto;flex:none}
+.student-shell .sidebar .brand b{display:block;font:700 1.15rem/1.1 var(--heading);letter-spacing:.04em;color:var(--wine)}
+.student-shell .sidebar .brand small{display:block;margin-top:.15rem;font-size:.78rem;font-weight:500;color:var(--mute)}
+.workspace :is(h1,h2,h3){font-weight:700;letter-spacing:-.04em}
+.workspace .page-heading h1,.workspace .hero h1{font-size:clamp(1.9rem,3.4vw,2.6rem)}
+.workspace label{font-weight:700;color:var(--text)}
+.workspace .page-heading p,.workspace .panel-empty,.workspace .panel-form p{color:var(--mute)}
+.menu-label{font-weight:700}
+.student-shell .sidebar nav a{font-weight:700}
+.tile dt{font-weight:700}
+.workspace .actions a{font-weight:700}
+.workspace button,.workspace .button{font-weight:700}
+@media (max-width:860px){.student-shell .sidebar .brand{flex:1;padding:0;border:0}}
+
+/* Show/hide eye inside the portal's password fields (the sign-in page has its own copy above) */
+.workspace .password-group{position:relative;display:flex;align-items:center}
+.workspace .password-group input{padding-right:3.2rem}
+.workspace .password-group .password-toggle,.workspace .password-group .password-toggle:hover:not(:disabled){position:absolute;right:.4rem;width:2.3rem;min-height:2.3rem;padding:0;border:0;border-radius:50%;background:transparent;color:var(--mute);box-shadow:none}
+.workspace .password-group .password-toggle:hover:not(:disabled),.workspace .password-group .password-toggle[aria-pressed="true"]{background:var(--tint);color:var(--maroon)}
+.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem;align-items:start;margin-bottom:1.25rem}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}

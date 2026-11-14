@@ -2,6 +2,8 @@ import { PreviewBooking } from './booking.js';
 import { notFound } from 'next/navigation';
 import { ClinicShell } from '../clinic/clinic-shell.js';
 import { StudentDashboard } from '../../lib/student-dashboard.js';
+import { NurseDeskView } from '../../lib/nurse-desk.js';
+import { AdminDeskView } from '../../lib/admin-desk.js';
 import { AppointmentList } from '../../lib/appointment-list.js';
 import { ScheduleCalendar } from '../schedule-calendar.js';
 import { addDays, addMonths, isDateKey, manilaDate, monthStart, toMs, weekday } from '../../lib/manila.js';
@@ -46,7 +48,7 @@ export default async function DashboardPreview({ searchParams }) {
   if (process.env.NODE_ENV !== 'development') notFound();
   const query = await searchParams;
   const { page = 'home' } = query;
-  if (!['home','book','appointments','profile','schedule'].includes(page)) notFound();
+  if (!['home','book','appointments','profile','schedule','nurse','admin'].includes(page)) notFound();
   const today = manilaDate(Date.now());
   const date = isDateKey(query.date) ? query.date : today;
   const appointments = query.empty ? [] : sampleAppointments(today);
@@ -54,6 +56,25 @@ export default async function DashboardPreview({ searchParams }) {
     { id: 'n1', title: 'Infirmary schedule update', body: 'The infirmary will be closed on November 14 (Friday).' },
     { id: 'n2', title: 'Flu vaccination week', body: 'Free flu shots at the infirmary, November 17 to 21, 9 AM to 3 PM.' }
   ];
+  if (page === 'nurse' || page === 'admin') {
+    const at = (offset, minutes) => new Date(toMs(addDays(today, offset), minutes)).toISOString();
+    const row = (id, reason, status, urgency, start, n) => ({ id, reference_number: 'CLN-2026-00' + n, reason, status, urgency, requested_start: start });
+    const todayVisits = query.empty ? [] : [row('v1', 'Vital signs check', 'confirmed', 'soon', at(0, 23 * 60 + 30), 41), row('v2', 'Medical certificate', 'checked_in', 'soon', at(0, 7 * 60), 40)];
+    const pending = query.empty ? [] : [row('p1', 'Medical consultation', 'pending', 'urgent', null, 44), row('p2', 'General check-up', 'pending', 'flexible', null, 45)];
+    const students = new Map(query.empty ? [] : [['v1', { full_name: 'Maria Santos', course: 'BS Nursing', year_level: 2 }], ['v2', { full_name: 'Jose Reyes', course: 'BS Biology', year_level: 3 }],
+      ['p1', { full_name: 'Ana Dizon', course: 'BS Education', year_level: 1 }], ['p2', { full_name: 'Paolo Cruz', course: 'BS IT', year_level: 4 }]]);
+    const staff = [
+      { email: 'n-01@nurses.merayag.invalid', role: 'nurse', active: true, full_name: 'Liza Ramos', last_sign_in_at: at(0, 8 * 60) },
+      { email: 'n-02@nurses.merayag.invalid', role: 'nurse', active: false, full_name: 'Grace Tan', last_sign_in_at: at(-20, 9 * 60) },
+      { email: 'doc@msugensan.edu.ph', role: 'physician', active: true, full_name: 'Dr. Mario Lim', last_sign_in_at: null },
+      { email: 'admin@msugensan.edu.ph', role: 'admin', active: true, full_name: null, last_sign_in_at: at(0, 7 * 60) }
+    ];
+    return <ClinicShell role={page} email="n-01@nurses.merayag.invalid" name={page === 'nurse' ? 'Liza Ramos' : 'admin@msugensan.edu.ph'} detail={page === 'nurse' ? 'N-01' : ''}>
+      <div className="menu-content">{page === 'nurse'
+        ? <NurseDeskView pending={pending} upcoming={todayVisits} students={students} counts={{ releases: query.empty ? 0 : 2, openDays: query.empty ? 0 : 6 }} plain />
+        : <AdminDeskView staff={query.empty ? [] : staff} />}</div>
+    </ClinicShell>;
+  }
   return <ClinicShell role="student" email="student@school.example" name="Santos" detail="Maria" avatar={null} preview={page}>
       <div key={page} className="menu-content">
       {page==='home' && <StudentDashboard appointments={appointments} name="Maria Santos" released={1} announcements={announcements} preview/>}

@@ -6,21 +6,15 @@ import { requireRole } from '../../../lib/session.js';
 import { clinicDate, reasons, statuses, urgencyLabels } from '../../../lib/clinic.js';
 import { AppointmentList } from '../../../lib/appointment-list.js';
 import { StudentDashboard, VisitDate } from '../../../lib/student-dashboard.js';
-import { clinicAction, createNurseAccount, manageStaffAccess, postAnnouncement, removeAnnouncement } from '../../actions.js';
+import { clinicAction, postAnnouncement, removeAnnouncement } from '../../actions.js';
 import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
 import { SlotBooking } from '../../slot-booking.js';
+import { Badge, Empty, Heading, Rows } from '../../../lib/clinic-ui.js';
+import { NurseDeskView } from '../../../lib/nurse-desk.js';
+import { AdminDeskView } from '../../../lib/admin-desk.js';
 import { manilaDate, timeLabel } from '../../../lib/manila.js';
 
 const roleNames = { student: 'Student', nurse: 'Nurse', physician: 'Physician', admin: 'Administrator' };
-function Heading({ title, children }) {
-  return <header className="page-heading"><h1>{title}</h1>{children && <p>{children}</p>}</header>;
-}
-function Badge({ status }) {
-  return <span className={'badge ' + status}>{statuses[status] ?? status}</span>;
-}
-function Empty({ children }) {
-  return <p className="paper empty">{children}</p>;
-}
 function checked(result) {
   if (result.error) throw new Error('The clinic database could not load this view.');
   return result.data;
@@ -68,43 +62,7 @@ export default async function Clinic({ params, searchParams }) {
 }
 
 async function AdminDesk({ db }) {
-  const staff = checked(await db.rpc('list_clinic_staff'));
-  return <>
-    <Heading title="Staff access">Manage who can work in the nurse and physician portals.</Heading>
-    <ActionForm action={createNurseAccount} label="Add nurse" className="paper form-stack">
-      <h2>Create a nurse account</h2>
-      <div className="field-grid">
-        <label>Nurse ID<input name="nurse_id" placeholder="N-01" maxLength={10} required /></label>
-        <label>Password<input type="password" name="password" autoComplete="new-password" minLength={6} maxLength={72} required />
-          <small>Use at least 6 characters.</small>
-        </label>
-      </div>
-    </ActionForm>
-    <ActionForm action={manageStaffAccess} label="Grant staff access" className="paper form-stack">
-      <h2>Assign a role</h2>
-      <p>Use the email of an existing, verified clinic account.</p>
-      <input type="hidden" name="access" value="grant" />
-      <div className="field-grid">
-        <label>Staff email<input type="email" name="email" required maxLength={254} /></label>
-        <label>Role<select name="role"><option value="nurse">Nurse</option><option value="physician">Physician</option></select></label>
-      </div>
-    </ActionForm>
-    <section className="paper">
-      <div className="section-heading"><h2>Staff directory</h2><Link href="/clinic/audit">View audit log</Link></div>
-      <div className="table-scroll"><table>
-        <thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Access</th><th scope="col">Action</th></tr></thead>
-        <tbody>{staff.map((member) => <tr key={member.email}>
-          <td>{member.email?.endsWith('@nurses.merayag.invalid') ? member.email.split('@')[0].toUpperCase().replace(/^N-?/, 'N-') : member.email}</td><td>{roleNames[member.role]}</td>
-          <td><span className={member.active ? 'badge confirmed' : 'badge cancelled'}>{member.active ? 'Active' : 'Revoked'}</span></td>
-          <td>{member.role !== 'admin' && <ActionForm action={manageStaffAccess} label={member.active ? 'Revoke access' : 'Restore access'}>
-            <input type="hidden" name="email" value={member.email} />
-            <input type="hidden" name="role" value={member.role} />
-            <input type="hidden" name="access" value={member.active ? 'revoke' : 'grant'} />
-          </ActionForm>}</td>
-        </tr>)}</tbody>
-      </table></div>
-    </section>
-  </>;
+  return <AdminDeskView staff={checked(await db.rpc('list_clinic_staff'))} />;
 }
 
 async function Profile({ db, user }) {
@@ -212,36 +170,26 @@ async function Appointments({ db }) {
   return <AppointmentList appointments={appointments} />;
 }
 
-const urgencyShort = { urgent: 'ASAP', soon: 'Soon', flexible: 'Flexible' };
-const timeOf = (value) => clinicDate(value, { hour: 'numeric', minute: '2-digit' }).toUpperCase();
-// A group of visit rows sits on one surface, separated by rules, instead of one box per row.
-function Rows({ children }) { return <div className="paper list">{children}</div>; }
-
-function AppointmentRow({ appointment }) {
-  return <Link className="visit-row" href={appointmentLink(appointment.id)}>
-    <VisitDate value={appointment.requested_start} fallback={urgencyShort[appointment.urgency]} />
-    <span className="visit-what"><strong>{appointment.reason}</strong>
-      <span className="visit-sub"><span>{appointment.requested_start ? timeOf(appointment.requested_start) : urgencyLabels[appointment.urgency]}</span>
-        <span>{appointment.reference_number}</span></span></span>
-    <Badge status={appointment.status} />
-  </Link>;
-}
-
 async function NurseDesk({ db }) {
   const columns = 'id, reference_number, reason, status, urgency, requested_start';
-  const [requests, visits] = (await Promise.all([
+  const today = manilaDate(Date.now());
+  const [requests, visits, releases, openDays] = await Promise.all([
     db.from('appointments').select(columns).eq('status', 'pending').order('urgency').order('created_at'),
-    db.from('appointments').select(columns).in('status', ['confirmed', 'checked_in']).order('requested_start')
-  ])).map(checked);
-  const today = clinicDate(Date.now(), { dateStyle: 'short' });
-  const todaysVisits = visits.filter((visit) => clinicDate(visit.requested_start, { dateStyle: 'short' }) === today);
-  const earlierVisits = visits.filter((visit) => Date.parse(visit.requested_start) < Date.now() && !todaysVisits.includes(visit));
-  return <><Heading title="Clinic desk">Review pending requests and schedule visits on the clinic calendar.</Heading>
-    <nav className="section-nav" aria-label="Clinic desk"><Link href="/clinic/calendar">Appointment calendar</Link><Link href="/clinic/releases">Certificate releases</Link></nav>
-    <section><h2>Pending requests</h2>{requests.length ? <Rows>{requests.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</Rows> : <Empty>New student requests will appear here.</Empty>}</section>
-    <section><h2>Today’s visits</h2>{todaysVisits.length ? <Rows>{todaysVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</Rows> : <Empty>No confirmed or checked-in visits today.</Empty>}</section>
-    {earlierVisits.length > 0 && <section><h2>Earlier visits to close</h2><Rows>{earlierVisits.map((a) => <AppointmentRow key={a.id} appointment={a} />)}</Rows></section>}
-  </>;
+    db.from('appointments').select(columns).in('status', ['confirmed', 'checked_in']).order('requested_start'),
+    db.from('certificates').select('appointment_id', { count: 'exact', head: true }).eq('status', 'authorized'),
+    db.from('schedules').select('id', { count: 'exact', head: true }).gte('clinic_date', today).is('cancelled_at', null)
+  ]);
+  const pending = checked(requests);
+  const upcoming = checked(visits);
+  // Student names come from a call that needs the latest database update; the desk still works without it.
+  const students = new Map();
+  const ids = [...pending, ...upcoming].map((item) => item.id).slice(0, 200);
+  if (ids.length) {
+    const { data } = await db.rpc('clinic_desk_students', { appointment_keys: ids });
+    for (const student of data ?? []) students.set(student.appointment_id, student);
+  }
+  return <NurseDeskView pending={pending} upcoming={upcoming} students={students}
+    counts={{ releases: releases.count ?? 0, openDays: openDays.count ?? 0 }} />;
 }
 
 function StatusForm({ id, status, label, denial = false }) {

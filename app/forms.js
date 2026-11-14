@@ -4,7 +4,7 @@ import { useActionState, useId, useState } from 'react';
 import { signIn, submitBooking } from './actions.js';
 
 // A password input with an eye button that shows or hides what was typed.
-function PasswordField({ label, hint, ...inputProps }) {
+export function PasswordField({ label, hint, ...inputProps }) {
   const [shown, setShown] = useState(false);
   const labelId = useId();
   return <label>
