@@ -17,8 +17,12 @@ async function limited(scope, value) {
   return data !== true;
 }
 
-export async function signIn(_, form) {
-  const email = emailField.safeParse(String(form.get('email') ?? '').trim().toLowerCase());
+export async function signIn(nurse, _, form) {
+  const nurseId = String(form.get('nurse_id') ?? '').trim().toUpperCase();
+  if (nurse && !/^N[0-9]{2,8}$/.test(nurseId)) return { error: 'Enter your nurse ID, such as N01.' };
+  const email = emailField.safeParse(nurse
+    ? nurseAccount(nurseId)
+    : String(form.get('email') ?? '').trim().toLowerCase());
   if (!email.success) return { error: 'Enter a valid school email address.' };
   const code = String(form.get('code') ?? '').trim();
   if (code && !/^\d{6,10}$/.test(code)) return { email: email.data, error: 'Enter the code from your school email.' };
@@ -33,12 +37,48 @@ export async function signIn(_, form) {
     return { email: code ? email.data : undefined, error: 'Too many attempts or sign-in is unavailable. Try again in a minute.' };
   }
   const auth = database().auth;
+  const password = form.get('password');
+  if (nurse && (typeof password !== 'string' || form.has('create_account'))) {
+    return { error: 'Enter your staff email and clinic account password.' };
+  }
+  if (password !== null) {
+    if (typeof password !== 'string' || password.length === 0 || password.length > 1024) {
+      return { error: 'Enter your clinic account password.' };
+    }
+    if (form.get('create_account') === 'yes') {
+      if (!domains.includes(email.data.split('@')[1])) {
+        return { error: 'Use your @msugensan.edu.ph email address to create an account.' };
+      }
+      if (password.length < 6 || Buffer.byteLength(password, 'utf8') > 72) {
+        return { error: 'Use a password with at least 6 characters and at most 72 bytes.' };
+      }
+      const { data, error } = await auth.signUp({ email: email.data, password });
+      if (error || data.session) {
+        return { error: 'Account creation could not be completed. Check your details or contact the infirmary.' };
+      }
+      return { email: email.data, message: 'Enter the verification code from your university email.' };
+    }
+    const { data, error } = await auth.signInWithPassword({ email: email.data, password });
+    if (error || !data.session || !data.user?.email_confirmed_at) {
+      return { error: nurse
+        ? 'Sign-in failed. Check your nurse ID and password, or contact the infirmary.'
+        : 'Sign-in failed. Check your email and clinic account password, or contact the infirmary.' };
+    }
+    const { data: role } = await database(data.session.access_token).rpc('current_clinic_role');
+    if (nurse && role !== 'nurse') return { error: 'This account does not have active nurse access.' };
+    if (!role || (role === 'student' && !domains.includes(email.data.split('@')[1]))) {
+      return { error: 'Use your approved university account to sign in.' };
+    }
+    await saveSession(data.session);
+    redirect('/clinic');
+  }
   if (!code) {
     const { error } = await auth.signInWithOtp({
       email: email.data, options: { shouldCreateUser: domains.includes(email.data.split('@')[1]) }
     });
-    if (error && error.status >= 500) return { error: 'Email delivery is unavailable. Try again shortly.' };
-    return { email: email.data, message: 'If this address can sign in, a code will arrive shortly.' };
+    if (error?.status === 429) return { error: 'Please wait a minute before requesting another code.' };
+    if (error) return { error: 'We could not send a sign-in code. Check your school email address or contact the infirmary.' };
+    return { email: email.data, message: 'Enter the verification code from your email.' };
   }
   const { data, error } = await auth.verifyOtp({ email: email.data, token: code, type: 'email' });
   if (error || !data.session) return { email: email.data, error: 'That code is invalid or expired. Request a new code.' };
@@ -49,6 +89,49 @@ export async function signIn(_, form) {
 export async function signOut() {
   await clearSession();
   redirect('/');
+}
+
+export async function manageStaffAccess(_, form) {
+  const { db } = await requireRole('admin');
+  const input = z.object({
+    email: emailField,
+    role: z.enum(['nurse', 'physician']),
+    access: z.enum(['grant', 'revoke'])
+  }).safeParse(Object.fromEntries(form));
+  if (!input.success) return { error: 'Enter the staff account email and choose a role.' };
+
+  const { email, role, access } = input.data;
+  const { error } = await db.rpc('manage_clinic_staff', {
+    staff_email: email, staff_role: role, enable_access: access === 'grant'
+  });
+  if (error) return { error: safeError(error, 'Staff access could not be updated.') };
+  redirect('/clinic/admin');
+}
+
+function nurseAccount(id) {
+  return id.toLowerCase() + '@nurses.merayag.invalid';
+}
+
+export async function createNurseAccount(_, form) {
+  const { db } = await requireRole('admin');
+  const id = String(form.get('nurse_id') ?? '').trim().toUpperCase();
+  const password = form.get('password');
+  if (!/^N[0-9]{2,8}$/.test(id)) return { error: 'Enter a nurse ID such as N01.' };
+  if (typeof password !== 'string' || password.length < 6 || Buffer.byteLength(password, 'utf8') > 72) {
+    return { error: 'Use a password with at least 6 characters and at most 72 bytes.' };
+  }
+  const email = nurseAccount(id);
+  const admin = storageAdmin().auth.admin;
+  const { data, error } = await admin.createUser({ email, password, email_confirm: true });
+  if (error || !data.user) return { error: 'Could not create the account. Check whether the nurse ID is already in use.' };
+
+  const assignment = await db.rpc('manage_clinic_staff', {
+    staff_email: email, staff_role: 'nurse', enable_access: true
+  });
+  if (assignment.error) {
+    return { error: 'Account created. Use Assign a role with ' + email + ' to finish granting access.' };
+  }
+  redirect('/clinic/admin');
 }
 
 const profile = z.object({

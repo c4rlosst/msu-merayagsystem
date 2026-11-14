@@ -5,7 +5,7 @@ import { requireRole } from '../../../lib/session.js';
 import { clinicDate, reasons, statuses } from '../../../lib/clinic.js';
 import { AppointmentList } from '../../../lib/appointment-list.js';
 import { StudentDashboard } from '../../../lib/student-dashboard.js';
-import { clinicAction, signOut } from '../../actions.js';
+import { clinicAction, createNurseAccount, manageStaffAccess, signOut } from '../../actions.js';
 import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
 
 const roleNames = { student: 'Student', nurse: 'Nurse', physician: 'Physician', admin: 'Administrator' };
@@ -13,7 +13,7 @@ const links = {
   student: [['/clinic', 'Home'], ['/clinic/book', 'Book'], ['/clinic/appointments', 'My appointments'], ['/clinic/profile', 'My profile']],
   nurse: [['/clinic', 'Clinic desk'], ['/clinic/audit', 'Audit log']],
   physician: [['/clinic', 'Certificates']],
-  admin: [['/clinic/audit', 'Audit log']]
+  admin: [['/clinic/admin', 'Staff access'], ['/clinic/audit', 'Audit log']]
 };
 
 function Heading({ title, children }) {
@@ -41,7 +41,9 @@ export default async function Clinic({ params, searchParams }) {
     if (role === 'student') content = await StudentHome({ db, user });
     if (role === 'nurse') content = await NurseDesk({ db });
     if (role === 'physician') content = await PhysicianQueue({ db });
-    if (role === 'admin') content = await Audit({ db, filters: {} });
+    if (role === 'admin') content = await AdminDesk({ db });
+  } else if (section.length === 1 && screen === 'admin' && role === 'admin') {
+    content = await AdminDesk({ db });
   } else if (section.length === 1 && screen === 'appointments' && role === 'student') {
     content = await Appointments({ db });
   } else if (section.length === 1 && screen === 'book' && role === 'student') {
@@ -65,7 +67,7 @@ export default async function Clinic({ params, searchParams }) {
       <Link href="/clinic" className="brand"><span aria-hidden="true">✚</span> MERAYAG</Link>
       <p className="role-label">{roleNames[role]} portal</p>
       <nav aria-label="Clinic">{links[role].map(([href, label]) =>
-        <Link key={href} href={href} aria-current={(screen ? href === '/clinic/' + screen : href === '/clinic') ? 'page' : undefined}>{label}</Link>
+        <Link key={href} href={href} aria-current={href === (screen ? '/clinic/' + screen : role === 'admin' ? '/clinic/admin' : '/clinic') ? 'page' : undefined}>{label}</Link>
       )}</nav>
       <form action={signOut}><button className="quiet">Sign out</button></form>
     </aside>
@@ -74,6 +76,46 @@ export default async function Clinic({ params, searchParams }) {
       <div key={section.join('/') || 'home'} className="menu-content">{content}</div>
     </main>
   </div>;
+}
+
+async function AdminDesk({ db }) {
+  const staff = checked(await db.rpc('list_clinic_staff'));
+  return <>
+    <Heading title="Staff access">Manage who can work in the nurse and physician portals.</Heading>
+    <ActionForm action={createNurseAccount} label="Add nurse" className="paper form-stack">
+      <h2>Create a nurse account</h2>
+      <div className="field-grid">
+        <label>Nurse ID<input name="nurse_id" placeholder="N01" maxLength={9} required /></label>
+        <label>Password<input type="password" name="password" autoComplete="new-password" minLength={6} maxLength={72} required />
+          <small>Use at least 6 characters.</small>
+        </label>
+      </div>
+    </ActionForm>
+    <ActionForm action={manageStaffAccess} label="Grant staff access" className="paper form-stack">
+      <h2>Assign a role</h2>
+      <p>Use the email of an existing, verified clinic account.</p>
+      <input type="hidden" name="access" value="grant" />
+      <div className="field-grid">
+        <label>Staff email<input type="email" name="email" required maxLength={254} /></label>
+        <label>Role<select name="role"><option value="nurse">Nurse</option><option value="physician">Physician</option></select></label>
+      </div>
+    </ActionForm>
+    <section className="paper">
+      <div className="section-heading"><h2>Staff directory</h2><Link href="/clinic/audit">View audit log</Link></div>
+      <div className="table-scroll"><table>
+        <thead><tr><th scope="col">Account</th><th scope="col">Role</th><th scope="col">Access</th><th scope="col">Action</th></tr></thead>
+        <tbody>{staff.map((member) => <tr key={member.email}>
+          <td>{member.email?.endsWith('@nurses.merayag.invalid') ? member.email.split('@')[0].toUpperCase() : member.email}</td><td>{roleNames[member.role]}</td>
+          <td><span className={member.active ? 'badge confirmed' : 'badge cancelled'}>{member.active ? 'Active' : 'Revoked'}</span></td>
+          <td>{member.role !== 'admin' && <ActionForm action={manageStaffAccess} label={member.active ? 'Revoke access' : 'Restore access'}>
+            <input type="hidden" name="email" value={member.email} />
+            <input type="hidden" name="role" value={member.role} />
+            <input type="hidden" name="access" value={member.active ? 'revoke' : 'grant'} />
+          </ActionForm>}</td>
+        </tr>)}</tbody>
+      </table></div>
+    </section>
+  </>;
 }
 
 async function Profile({ db, user }) {

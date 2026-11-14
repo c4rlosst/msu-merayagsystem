@@ -12,15 +12,23 @@ export function ActionForm({ action, children, label, className }) {
   </form>;
 }
 
-export function LoginForm({ signup = false }) {
-  const [state, dispatch, pending] = useActionState(signIn, {});
+export function LoginForm({ signup = false, password = false, nurse = false }) {
+  const [state, dispatch, pending] = useActionState(signIn.bind(null, nurse), {});
   return <form action={dispatch} className="form-stack">
-    <label>School email<input type="email" name="email" autoComplete="email" required
-      key={state.email ?? 'email'} defaultValue={state.email} readOnly={Boolean(state.email)} /></label>
+    {nurse ? <label>Nurse ID<input name="nurse_id" autoComplete="username" placeholder="N01" maxLength={9} required /></label> :
+      <label>School email<input type="email" name="email" autoComplete="email" required
+        key={state.email ?? 'email'} defaultValue={state.email} readOnly={Boolean(state.email)} /></label>}
+    {password && <label>Clinic account password<input type="password" name="password" autoComplete="current-password" maxLength={1024} required /></label>}
+    {signup && !state.email && <>
+      <input type="hidden" name="create_account" value="yes" />
+      <label>Create a clinic password<input type="password" name="password" autoComplete="new-password" minLength={6} maxLength={72} required />
+        <small>Use at least 6 characters.</small>
+      </label>
+    </>}
     {state.email && <label>Email code<input name="code" inputMode="numeric" autoComplete="one-time-code" required /></label>}
     {state.message && <p role="status">{state.message}</p>}
     {state.error && <p role="alert" className="error">{state.error}</p>}
-    <button disabled={pending}>{pending ? 'Please wait…' : state.email ? (signup ? 'Verify email and continue' : 'Log in') : (signup ? 'Create account' : 'Send sign-in code')}</button>
+    <button disabled={pending}>{pending ? 'Please wait…' : password ? 'Log in' : state.email ? (signup ? 'Verify email and continue' : 'Log in') : (signup ? 'Create account' : 'Send sign-in code')}</button>
     {state.email && <a href={signup ? "/signup" : "/"}>Use a different email or request a new code</a>}
   </form>;
 }

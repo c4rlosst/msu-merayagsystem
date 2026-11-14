@@ -154,6 +154,9 @@ th,td{padding:.7rem;vertical-align:top;border-bottom:1px solid var(--line)}
 .auth-verification{font-size:.9rem;color:#656474;margin:1.1rem 0 0;line-height:1.6}
 .auth-switch{margin-top:2.5rem;text-align:center;padding-top:2rem;border-top:1px solid #e7e2e7;color:#656474}
 .auth-help{font-size:.9rem;text-align:center;color:#656474;margin:2rem 0 0}
+.auth-form-content .google-signin{width:100%;min-height:3.6rem;border-radius:2rem;background:#611943;color:white}
+.auth-form-content .google-signin:hover{background:#4d1234}
+.nurse-login-link{display:inline-block;margin-top:1rem}
 @media(max-width:760px){
   .auth-split{grid-template-columns:1fr}
   .auth-brand{padding:2rem 1.5rem}
