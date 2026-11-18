@@ -944,3 +944,90 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .credit:hover{text-decoration:underline}
 .student-shell .credit{color:#5a5f70;padding:.1rem .65rem}
 .sidebar-foot .credit{color:#d7b3bf;text-align:center}
+
+
+/* ===================== Phones =====================
+   Students get a bottom tab bar (thumb reach, like an app); staff keep a sticky top bar. Touch targets are
+   at least 44px, the sign-out is an icon, and the photo sits in the header. */
+@media (max-width:860px){
+  /* Student: header = logo, photo, sign out. Menu = fixed bottom tab bar. */
+  .student-shell .sidebar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-bottom:1px solid var(--rule)}
+  .student-shell .sidebar .brand{flex:1;padding:0;border:0}
+  .student-shell .menu-label,.student-shell .credit{display:none}
+  .student-shell .signout{order:3;margin:0;padding:0;border:0}
+  .student-shell .sidebar .signout button{display:grid;place-items:center;width:2.75rem;min-height:2.75rem;padding:0;border-radius:.8rem}
+  .student-shell .signout .label{display:none}
+  .student-shell .topbar{top:.5rem;right:4.3rem}
+  .student-shell .topbar .avatar{width:2.75rem;height:2.75rem}
+  .student-shell .sidebar nav{position:fixed;left:0;right:0;bottom:0;z-index:40;order:0;width:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding:.25rem .4rem calc(.25rem + env(safe-area-inset-bottom));overflow:visible;background:#fff;border-top:1px solid var(--rule);box-shadow:0 -6px 18px #2a1c220f}
+  .student-shell .sidebar nav>a{flex-direction:column;justify-content:center;gap:.15rem;min-height:3.5rem;padding:.4rem .2rem;font-size:.72rem;text-align:center;white-space:normal}
+  .student-shell .sidebar nav>a .nav-chevron{display:none}
+  .student-shell .nav-pill{background:#f3e0ec;border-radius:.8rem}
+  .student-shell .nav-pill::before{content:none}
+  .student-shell .sidebar nav a[aria-current]{color:var(--maroon)}
+  .student-shell .workspace{padding-bottom:6rem}
+
+  /* Staff: the top bar stays put while the page scrolls */
+  .clinic-shell:not(.student-shell) .sidebar{position:sticky;top:0;z-index:30}
+
+  /* Touch targets: 44px and up */
+  .workspace button,.workspace .button{min-height:2.9rem}
+  .workspace .status-filters button{min-height:2.75rem;padding:.3rem 1rem}
+  .workspace .admin-table button,.workspace .post .inline-form button,.row-reset summary,.workspace .row-actions .button.quiet{min-height:2.75rem;padding:.3rem 1.1rem}
+  .workspace .cal-day{min-height:2.75rem}
+  .workspace .password-group .password-toggle,.workspace .password-group .password-toggle:hover:not(:disabled){width:2.75rem;min-height:2.75rem}
+  .workspace :is(input,select,textarea){min-height:3rem;font-size:1rem}
+
+  /* Content */
+  .workspace .hero .button{width:100%;justify-content:center}
+  .workspace .hero{padding:1.2rem}
+  .workspace .page-heading{margin-bottom:1.1rem}
+  .workspace .panel-head{padding:.9rem 1rem .5rem}
+  .panel .rows{padding:0 .35rem .5rem}
+  .posts{padding:0 .35rem .5rem}
+  .tiles{gap:.6rem}
+  .tile{padding:.8rem}
+}
+
+.nav-short{display:none}
+@media (max-width:860px){
+  .student-shell .nav-label{display:none}
+  .student-shell .nav-short{display:block}
+  .student-shell .topbar{z-index:35}
+  .student-shell .sidebar nav .nav-pill{background:#f3e0ec}
+}
+.student-shell .workspace .cal-day[aria-pressed="true"],.student-shell .workspace .cal-day[aria-pressed="true"]:hover:not(:disabled){border-radius:.8rem}
+
+/* Phones: a two-row staff header, and the Icons8 credit moves to the bottom of the page */
+.credit-foot{display:none}
+@media (max-width:860px){
+  .sidebar-foot .staff-id,.sidebar-foot .credit{display:none}
+  .sidebar .sidebar-foot button{min-height:2.75rem;white-space:nowrap}
+  .credit-foot{display:block;padding:0 1rem 6rem;text-align:center;font-size:.75rem}
+  .credit-foot a{color:var(--mute)}
+  .clinic-shell:not(.student-shell) .credit-foot{padding-bottom:2rem}
+  .clinic-shell:not(.student-shell){display:flex;flex-direction:column}
+  .clinic-shell:not(.student-shell) .workspace{flex:1}
+}
+
+/* Appointment detail: one rhythm for every block, labelled rows, a quiet timeline */
+.detail{display:grid;gap:1.25rem;align-content:start}
+.detail>*{margin:0}
+.detail>.button{justify-self:start}
+.detail>.page-heading{margin-bottom:.25rem}
+.workspace .head-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem .8rem;margin:.4rem 0 0;font-weight:600}
+.workspace .paper>h2:first-child,.workspace .form-stack>h2:first-child{margin-top:0}
+.panel .facts{margin:0;padding:0 1.25rem .6rem}
+.panel .facts div{grid-template-columns:minmax(7rem,11rem) minmax(0,1fr);gap:.3rem 1rem;padding:.85rem 0;border-top:1px solid #f0e8ec}
+.panel .facts div:first-child{border-top:0}
+.panel .facts dt{font-weight:600;color:var(--mute)}
+.panel .facts dd{font-weight:600;color:var(--text)}
+.panel-foot{padding:.4rem 1.25rem 1.25rem}
+.timeline{margin:0;padding:0 1.25rem .6rem;list-style:none}
+.timeline li{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 0;border-top:1px solid #f0e8ec}
+.timeline li:first-child{border-top:0}
+.timeline time{font-size:.9rem;color:var(--mute);font-variant-numeric:tabular-nums}
+@media (max-width:560px){.panel .facts div{grid-template-columns:minmax(0,1fr);gap:.1rem}.timeline li{flex-wrap:wrap;gap:.3rem 1rem}}
+
+/* Cancelled and denied visits: a soft red block instead of a solid one */
+.visit-date.tone-red,.visit-date.is-open.tone-red{background:#fde4e8;color:#a3102f}

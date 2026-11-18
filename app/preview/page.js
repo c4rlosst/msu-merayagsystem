@@ -5,6 +5,7 @@ import { StudentDashboard } from '../../lib/student-dashboard.js';
 import { NurseDeskView } from '../../lib/nurse-desk.js';
 import { AdminDeskView } from '../../lib/admin-desk.js';
 import { AnnouncementsView } from '../../lib/announcements-view.js';
+import { AppointmentSummary } from '../../lib/appointment-summary.js';
 import { AppointmentList } from '../../lib/appointment-list.js';
 import { ScheduleCalendar } from '../schedule-calendar.js';
 import { addDays, addMonths, isDateKey, manilaDate, monthStart, toMs, weekday } from '../../lib/manila.js';
@@ -49,7 +50,7 @@ export default async function DashboardPreview({ searchParams }) {
   if (process.env.NODE_ENV !== 'development') notFound();
   const query = await searchParams;
   const { page = 'home' } = query;
-  if (!['home','book','appointments','profile','schedule','nurse','admin','announcements'].includes(page)) notFound();
+  if (!['home','book','appointments','profile','schedule','nurse','admin','announcements','detail'].includes(page)) notFound();
   const today = manilaDate(Date.now());
   const date = isDateKey(query.date) ? query.date : today;
   const appointments = query.empty ? [] : sampleAppointments(today);
@@ -78,6 +79,13 @@ export default async function DashboardPreview({ searchParams }) {
         : page === 'nurse'
         ? <NurseDeskView pending={pending} upcoming={todayVisits} students={students} counts={{ releases: query.empty ? 0 : 2, openDays: query.empty ? 0 : 6 }} plain />
         : <AdminDeskView staff={query.empty ? [] : staff} selfEmail="admin@msugensan.edu.ph" />}</div>
+    </ClinicShell>;
+  }
+  if (page === 'detail') {
+    const at = (offset, minutes) => new Date(toMs(addDays(today, offset), minutes)).toISOString();
+    const item = { reason: 'Vital signs check', reference_number: 'CLN-2026-000010', status: 'cancelled', requested_start: null, urgency: 'soon', concern: 'Headache and dizziness since yesterday.', decision_reason: 'The nurse is out on Friday. Please book another time.' };
+    return <ClinicShell role="student" email="student@school.example" name="Santos" detail="Maria" avatar={null} preview="appointments">
+      <div className="menu-content"><div className="detail"><AppointmentSummary item={item} letterId="sample" history={[{ status: 'pending', occurred_at: at(-4, 650) }, { status: 'cancelled', occurred_at: at(-3, 35) }]} /></div></div>
     </ClinicShell>;
   }
   return <ClinicShell role="student" email="student@school.example" name="Santos" detail="Maria" avatar={null} preview={page}>

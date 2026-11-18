@@ -9,10 +9,11 @@ import { StudentDashboard, VisitDate } from '../../../lib/student-dashboard.js';
 import { clinicAction } from '../../actions.js';
 import { ActionForm, BookingForm, PrintButton } from '../../forms.js';
 import { SlotBooking } from '../../slot-booking.js';
-import { Badge, Empty, Heading, Rows } from '../../../lib/clinic-ui.js';
+import { Badge, Empty, Heading, Panel, Rows } from '../../../lib/clinic-ui.js';
 import { NurseDeskView } from '../../../lib/nurse-desk.js';
 import { AdminDeskView } from '../../../lib/admin-desk.js';
 import { AccountView } from '../../../lib/account.js';
+import { AppointmentSummary } from '../../../lib/appointment-summary.js';
 import { AnnouncementsView } from '../../../lib/announcements-view.js';
 import { accountLabel } from '../../../lib/staff-id.js';
 import { manilaDate, timeLabel } from '../../../lib/manila.js';
@@ -272,17 +273,8 @@ async function Appointment({ db, role, id, filters }) {
   } else {
     history = extra;
   }
-  return <><Heading title={item.reason}>{item.reference_number}</Heading>
-    <section className="paper"><Badge status={item.status} />
-      <dl className="facts"><div><dt>Visit time</dt><dd>{item.requested_start ? clinicDate(item.requested_start) : 'Awaiting nurse scheduling'}</dd></div>
-        {student && <div><dt>Student</dt><dd>{student.full_name} · {student.student_number}</dd></div>}
-        <div><dt>Urgency</dt><dd>{urgencyLabels[item.urgency]}</dd></div><div><dt>Concern</dt><dd>{item.concern}</dd></div>
-        {item.decision_reason && <div><dt>Clinic response</dt><dd>{item.decision_reason}</dd></div>}
-      </dl>
-      {letter && <a href={'/letters/' + id} target="_blank" rel="noreferrer">Open referral or excuse letter</a>}
-    </section>
-    {history && <section className="paper"><h2>Status history</h2><ol className="history">{history.map((event, index) =>
-      <li key={index}><Badge status={event.status} /><time>{clinicDate(event.occurred_at)}</time></li>)}</ol></section>}
+  return <div className="detail">
+    <AppointmentSummary item={item} student={student} letterId={letter ? id : null} history={history} />
     {role === 'student' && ['pending', 'confirmed'].includes(item.status) && <StatusForm id={id} status="cancelled" label="Cancel appointment" />}
     {role === 'student' && certificate?.status === 'released' && <Link className="button" href={'/clinic/certificate/' + id}>View medical certificate</Link>}
     {role === 'nurse' && item.status === 'pending' && <section className="paper form-stack"><h2>Review request</h2>
@@ -305,7 +297,7 @@ async function Appointment({ db, role, id, filters }) {
         <input type="hidden" name="id" value={id} /><label>Released to<input name="text" maxLength={200} required /></label>
       </ActionForm>}
     </section>}
-  </>;
+  </div>;
 }
 
 async function Certificate({ db, id }) {
