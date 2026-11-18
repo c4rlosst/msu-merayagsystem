@@ -928,3 +928,8 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .student-shell .nav-pill{background:#fdebc3}
 .tile dt{font-size:.85rem;text-transform:none;letter-spacing:0}
 .actions.cols-4{grid-template-columns:repeat(auto-fit,minmax(6.4rem,1fr))}
+
+/* Result of a cancellation email, shown above the page */
+.workspace .notice-banner{display:flex;align-items:center;gap:.6rem;max-width:none;margin:0 0 1rem;padding:.75rem 1rem;border-radius:.9rem;font-weight:600}
+.notice-banner.is-ok{background:#e1f0e7;color:#1d6a45}
+.notice-banner.is-warn{background:#fff3d1;color:#6b4a00}

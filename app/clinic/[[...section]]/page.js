@@ -62,9 +62,22 @@ export default async function Clinic({ params, searchParams }) {
     content = await Certificate({ db, id });
   }
   if (!content) notFound();
+  const query = await searchParams;
 
   // The sidebar and page frame come from app/clinic/layout.js, so only this content changes between pages.
-  return <div key={section.join('/') || 'home'} className="menu-content">{content}</div>;
+  return <div key={section.join('/') || 'home'} className="menu-content">
+    {role === 'nurse' && <EmailNotice kind={query.emailed} count={Number(query.n) || 0} />}{content}</div>;
+}
+
+// Tells a nurse whether the students were emailed after a cancellation (the cancellation itself always goes through).
+function EmailNotice({ kind, count }) {
+  const words = {
+    sent: [true, count === 1 ? 'Cancelled. The student was emailed.' : 'Cancelled. ' + count + ' students were emailed.'],
+    partial: [false, 'Cancelled. Some students could not be emailed, so tell them directly.'],
+    failed: [false, 'Cancelled, but the email could not be sent. Let the student know directly.'],
+    off: [false, 'Cancelled. Email notices are not set up yet, so the student was not emailed.']
+  }[kind];
+  return words ? <p role="status" className={'notice-banner ' + (words[0] ? 'is-ok' : 'is-warn')}>{words[1]}</p> : null;
 }
 
 async function AdminDesk({ db, user }) {
@@ -141,7 +154,7 @@ async function Slots({ db }) {
             <ActionForm action={clinicAction.bind(null, 'cancel_schedule')} label="Cancel this day" className="form-stack">
               <input type="hidden" name="id" value={item.id} />
               <label>Reason shown to students<textarea name="explanation" required maxLength={1000} /></label>
-              <small>Every booking on this day is cancelled and the students see this reason. You can only cancel a day that hasn’t opened yet.</small>
+              <small>Every booking on this day is cancelled, and the students booked that day are emailed this reason. You can only cancel a day that hasn’t opened yet.</small>
             </ActionForm></details>}
         </div>;
       })}</div> : <Empty>No days are open yet. Open a day above so students can book.</Empty>}
@@ -280,6 +293,10 @@ async function Appointment({ db, role, id, filters }) {
     {role === 'nurse' && item.status === 'confirmed' && <section className="paper form-stack"><h2>Visit arrival</h2>
       <StatusForm id={id} status="checked_in" label="Check in student" />
       {new Date(item.requested_end) <= new Date() && <StatusForm id={id} status="no_show" label="Record no-show" />}
+    </section>}
+    {role === 'nurse' && item.status === 'confirmed' && <section className="paper form-stack"><h2>Cancel this visit</h2>
+      <p>The student gets an email with your reason.</p>
+      <StatusForm id={id} status="cancelled" label="Cancel appointment" denial />
     </section>}
     {role === 'nurse' && item.status === 'checked_in' && <><VisitForm id={id} clinical={clinical} /><StatusForm id={id} status="completed" label="Complete visit" /></>}
     {role === 'nurse' && item.status === 'completed' && <ClinicalSummary record={clinical} />}

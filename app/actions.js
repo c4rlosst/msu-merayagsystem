@@ -8,6 +8,8 @@ import { database, storageAdmin, saveSession, clearSession, requireRole } from '
 import { reasons } from '../lib/clinic.js';
 import { fetchBookings } from '../lib/bookings.js';
 import { staffAccount, staffPattern } from '../lib/staff-id.js';
+import { mailConfigured, sendMail } from '../lib/mail.js';
+import { cancellationEmail } from '../lib/cancellation-email.js';
 
 const uid = z.uuid();
 const detail = (id) => '/clinic/appointment/' + id;
@@ -326,15 +328,42 @@ const schedule = z.object({
 const numericVisit = ['temperature_c', 'systolic', 'diastolic', 'pulse', 'respiratory_rate', 'spo2', 'height_cm', 'weight_kg'];
 const textVisit = ['findings', 'assessment', 'notes'];
 
+// Emails each student whose appointment a nurse just cancelled. Mail problems never undo the cancellation;
+// the result only tells the nurse what happened: 'sent', 'partial', 'failed' or 'off' (email not set up).
+async function notifyCancelled(db, ids, explanation) {
+  if (!mailConfigured()) return { status: 'off', count: 0 };
+  const { data: rows } = await db.from('appointments')
+    .select('id, student_id, reference_number, reason, requested_start').in('id', ids.slice(0, 200));
+  const named = new Map();
+  const { data: people } = await db.rpc('clinic_desk_students', { appointment_keys: ids.slice(0, 200) });
+  for (const person of people ?? []) named.set(person.appointment_id, person.full_name);
+  const origin = process.env.CLINIC_APP_ORIGIN ? new URL('/clinic/book', process.env.CLINIC_APP_ORIGIN).href : null;
+  let sent = 0, failed = 0;
+  for (const row of rows ?? []) {
+    const { data } = await storageAdmin().auth.admin.getUserById(row.student_id);
+    const address = data?.user?.email;
+    if (!address || address.endsWith('.invalid')) { failed += 1; continue; }
+    const meta = data.user.user_metadata ?? {};
+    const mail = cancellationEmail({
+      name: named.get(row.id) || meta.full_name || meta.name, reason: row.reason, start: row.requested_start,
+      reference: row.reference_number, explanation, bookUrl: origin
+    });
+    const result = await sendMail({ to: address, ...mail });
+    if (result.ok) sent += 1; else failed += 1;
+  }
+  return { status: failed === 0 && sent > 0 ? 'sent' : sent > 0 ? 'partial' : failed > 0 ? 'failed' : 'off', count: sent };
+}
+
 export async function clinicAction(kind, _, form) {
   const roles = {
     profile: ['student'], schedule: ['nurse'], edit_schedule: ['nurse'], cancel_schedule: ['nurse'],
     assign_time: ['nurse'], status: ['student', 'nurse'], visit: ['nurse'], authorize: ['physician'], release: ['nurse']
   };
   if (!Object.hasOwn(roles, kind)) return { error: 'This action is unavailable.' };
-  const { db, user } = await requireRole(...roles[kind]);
+  const { db, user, role } = await requireRole(...roles[kind]);
   const fields = Object.fromEntries(form);
   let result;
+  let notify = null; // appointments a nurse cancelled, whose students get an email
   let destination = '/clinic';
   if (kind === 'profile') {
     const parsed = profile.safeParse(fields);
@@ -371,6 +400,12 @@ export async function clinicAction(kind, _, form) {
       case 'cancel_schedule': {
         const reason = z.string().trim().min(1).max(1000).safeParse(fields.explanation);
         if (!reason.success) return { error: 'Enter a cancellation reason.' };
+        // Remember who is booked on this day before it is cancelled, so they can be told.
+        const { data: daySlots } = await db.from('slots').select('id').eq('schedule_id', id);
+        const { data: booked } = (daySlots ?? []).length
+          ? await db.from('appointments').select('id').in('slot_id', daySlots.map((slot) => slot.id)).in('status', ['pending', 'confirmed'])
+          : { data: [] };
+        notify = { ids: (booked ?? []).map((row) => row.id), explanation: reason.data };
         result = await db.rpc('cancel_clinic_schedule', { schedule_key: id, explanation: reason.data });
         destination = '/clinic/slots';
         break;
@@ -379,6 +414,10 @@ export async function clinicAction(kind, _, form) {
         const status = z.enum(['confirmed', 'denied', 'cancelled', 'checked_in', 'completed', 'no_show']).safeParse(fields.status);
         const reason = z.string().trim().max(1000).safeParse(fields.explanation ?? '');
         if (!status.success || !reason.success || (status.data === 'denied' && !reason.data)) return { error: 'Choose an action and enter a reason for denial.' };
+        if (status.data === 'cancelled' && role === 'nurse') {
+          if (!reason.data) return { error: 'Enter a reason so the student knows why the visit was cancelled.' };
+          notify = { ids: [id], explanation: reason.data };
+        }
         result = await db.rpc('change_clinic_appointment_status', { appointment_key: id, new_status: status.data, explanation: reason.data || null });
         break;
       }
@@ -412,6 +451,10 @@ export async function clinicAction(kind, _, form) {
     }
   }
   if (result?.error) return { error: safeError(result.error, 'The record could not be saved. Check your entries and try again.') };
+  if (notify?.ids.length) {
+    const outcome = await notifyCancelled(db, notify.ids, notify.explanation);
+    destination += (destination.includes('?') ? '&' : '?') + 'emailed=' + outcome.status + '&n=' + outcome.count;
+  }
   redirect(destination);
 }
 
