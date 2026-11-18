@@ -243,7 +243,7 @@ th,td{padding:.7rem;vertical-align:top;border-bottom:1px solid var(--line)}
 
 /* ===================== Clinic portal =====================
    One maroon (sign-in and portal now match), a deep wine sidebar, gold only as a signal for
-   "now" and "next", flat surfaces separated by rules, and a ticket for the next visit. */
+   "now" and "next", flat surfaces separated by rules. */
 :root{--maroon:#810d35;--maroon-dark:#6a0b2c;--wine:#2e0814;--fog:#f3f0f1;--rule:#e3dbde;--text:#2a1c22;--mute:#6f6168;--tint:#f8eef1;--signal:#ffb719}
 
 .clinic-shell{grid-template-columns:15.5rem minmax(0,1fr);background:var(--fog);color:var(--text)}
@@ -333,25 +333,6 @@ input[type=radio]{accent-color:var(--maroon)}
 .appointment-empty p{margin:0 0 1.1rem}
 .workspace .paper.empty,.empty{max-width:none;color:var(--mute)}
 
-/* The next visit as a queue ticket: the one bold element on the home screen */
-.ticket{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 9.5rem;margin-bottom:1.2rem}
-.ticket-main{background:var(--wine);color:#fff;padding:1.8rem 2rem;border-radius:1.1rem 0 0 1.1rem}
-.ticket-stub{position:relative;display:grid;align-content:center;justify-items:center;background:var(--signal);color:var(--wine);border-radius:0 1.1rem 1.1rem 0;border-left:2px dashed #2e081466}
-.ticket-stub::before,.ticket-stub::after{content:"";position:absolute;left:-.65rem;width:1.3rem;height:1.3rem;border-radius:50%;background:var(--fog)}
-.ticket-stub::before{top:-.65rem}
-.ticket-stub::after{bottom:-.65rem}
-.ticket-stub strong{font:700 2.2rem/1 var(--heading);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-.ticket-stub span{margin-top:.2rem;font-weight:700;font-size:.9rem;letter-spacing:.04em}
-.ticket h2{margin:0 0 .35rem;font-size:.95rem;font-weight:600;color:#efc4d1}
-.ticket .ticket-day{margin:0;max-width:none;font:700 clamp(1.5rem,3vw,2.15rem)/1.15 var(--heading);letter-spacing:-.03em;color:#fff}
-.ticket .ticket-reason{margin:.4rem 0 1.1rem;font-size:1.05rem;color:#f1d8e0}
-.ticket .ticket-meta{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1rem;margin:0;max-width:none;font-size:.9rem;color:#d7b3bf}
-.workspace .ticket a:not(.button){color:#fff;font-weight:600}
-.ticket.is-empty{grid-template-columns:1fr}
-.ticket.is-empty .ticket-main{border-radius:1.1rem}
-.workspace .ticket .button{background:var(--signal);color:var(--wine)}
-.workspace .ticket .button:hover{background:#ffc43d}
-.ticket :focus-visible{outline-color:var(--signal)}
 
 
 /* Filters, nav pills, detail lists, tables */
@@ -384,13 +365,6 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
   .sidebar-foot span{display:none}
   .sidebar .sidebar-foot button{width:auto;padding:.3rem 1rem}
   .workspace{padding:1.4rem 1rem 3rem}
-  .ticket{grid-template-columns:1fr}
-  .ticket-main{padding:1.4rem;border-radius:1.1rem 1.1rem 0 0}
-  .ticket-stub{grid-auto-flow:column;justify-content:center;gap:.6rem;padding:.8rem;border-radius:0 0 1.1rem 1.1rem;border-left:0;border-top:2px dashed #2e081466}
-  .ticket-stub span{margin:0}
-  .ticket-stub::before,.ticket-stub::after{top:-.65rem;bottom:auto}
-  .ticket-stub::before{left:-.65rem}
-  .ticket-stub::after{left:auto;right:-.65rem}
   .workspace a.visit-row,.workspace div.visit-row{grid-template-columns:3.2rem minmax(0,1fr);gap:.8rem}
   .visit-row .badge{grid-column:2}
 }
@@ -903,8 +877,6 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .workspace .panel-head h2{font-size:1.05rem;text-transform:uppercase;letter-spacing:.05em}
 .count{padding:.05rem .5rem;background:var(--maroon);color:#fff}
 
-/* Page titles get a short red bar */
-.workspace .page-heading h1::after{content:"";display:block;width:2.8rem;height:4px;margin-top:.8rem;border-radius:4px;background:#c0183c}
 
 /* Date blocks: solid status colour, white day number */
 .visit-date,.visit-date.is-open{width:3.7rem;padding:.45rem 0;background:var(--solid,var(--maroon));color:var(--solid-ink,#fff)}
@@ -933,3 +905,42 @@ a,button,input,select,textarea{transition:background-color .15s ease,border-colo
 .workspace .notice-banner{display:flex;align-items:center;gap:.6rem;max-width:none;margin:0 0 1rem;padding:.75rem 1rem;border-radius:.9rem;font-weight:600}
 .notice-banner.is-ok{background:#e1f0e7;color:#1d6a45}
 .notice-banner.is-warn{background:#fff3d1;color:#6b4a00}
+
+/* ===================== Polish pass =====================
+   Hierarchy from size and weight (no tracked capitals), flat panels with elevation kept for hover, one
+   quiet icon colour with red reserved for things that need attention, concentric radii, one bold element. */
+:root{--r-lg:1rem}
+
+/* Titles and labels: sentence case, no tracking */
+.workspace .panel-head h2{text-transform:none;letter-spacing:-.01em}
+.workspace :is(h2,h3){letter-spacing:-.02em}
+.workspace .kicker,.workspace .hero-next .kicker,.workspace .next-card .kicker{font-size:.85rem;letter-spacing:0;text-transform:none}
+.badge{font-size:.78rem;letter-spacing:0;text-transform:none}
+.visit-date small{font-size:.7rem;letter-spacing:0;text-transform:none}
+.visit-date b{font-variant-numeric:tabular-nums}
+
+/* Surfaces: borders for structure, no matching shadow under every card */
+.workspace .panel,.tile{border-radius:var(--r-lg);box-shadow:none}
+.workspace .panel a.visit-row,.workspace .panel div.visit-row{border-radius:calc(var(--r-lg) - .6rem)}
+.visit-date,.tile-icon{border-radius:.6rem}
+
+/* Icon colour: one quiet plum; red only when something needs attention; grey when there is nothing */
+.tile .tile-icon{background:var(--maroon);color:#fff}
+.tile.is-alert .tile-icon{background:#c0183c}
+.tile.is-zero .tile-icon{background:#ece8ea;color:#a99ca2}
+.notice .tile-icon,.post .tile-icon{background:var(--maroon);color:#fff}
+
+/* One bold element per screen: the welcome card. The next-visit card is a flat block, no stripes. */
+.hero::after,.next-card::after{display:none}
+.next-card{background:var(--maroon)}
+
+/* Student menu text meets 4.5:1 on white (was 3.2:1) */
+.student-shell .sidebar nav a:not([aria-current]),.student-shell .menu-label{color:#5a5f70}
+.student-shell .sidebar nav a:not([aria-current]):hover{color:var(--maroon)}
+
+/* Icons8 icons are PNG masks, so they take the text colour like any glyph */
+.ico{display:inline-block;flex:none;background-color:currentColor;-webkit-mask:var(--ico) center/contain no-repeat;mask:var(--ico) center/contain no-repeat}
+.credit{display:block;margin-top:.6rem;font-size:.72rem;color:#8b8f99;text-decoration:none}
+.credit:hover{text-decoration:underline}
+.student-shell .credit{color:#5a5f70;padding:.1rem .65rem}
+.sidebar-foot .credit{color:#d7b3bf;text-align:center}

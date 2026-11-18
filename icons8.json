@@ -1,0 +1,86 @@
+{
+  "version": 2,
+  "icons": {
+    "pack": "m_outlined",
+    "sizes": [
+      16,
+      20,
+      24
+    ],
+    "color": "currentColor",
+    "items": {
+      "home": {
+        "id": "83326",
+        "commonName": "home"
+      },
+      "calendar": {
+        "id": "84997",
+        "commonName": "calendar"
+      },
+      "today": {
+        "id": "86302",
+        "commonName": "today"
+      },
+      "calendar-plus": {
+        "id": "116220",
+        "commonName": "calendar-plus"
+      },
+      "clock": {
+        "id": "82767",
+        "commonName": "clock"
+      },
+      "user": {
+        "id": "82751",
+        "commonName": "user"
+      },
+      "exit": {
+        "id": "82792",
+        "commonName": "exit"
+      },
+      "certificate": {
+        "id": "86716",
+        "commonName": "certificate"
+      },
+      "megaphone": {
+        "id": "86968",
+        "commonName": "megaphone"
+      },
+      "identification-documents": {
+        "id": "87079",
+        "commonName": "identification-documents"
+      },
+      "checked": {
+        "id": "82766",
+        "commonName": "checked"
+      },
+      "inspection": {
+        "id": "88011",
+        "commonName": "inspection"
+      },
+      "error": {
+        "id": "82783",
+        "commonName": "error"
+      },
+      "user-group": {
+        "id": "87209",
+        "commonName": "user-group"
+      },
+      "lock": {
+        "id": "82747",
+        "commonName": "lock"
+      },
+      "upload": {
+        "id": "82709",
+        "commonName": "upload"
+      },
+      "trash": {
+        "id": "85081",
+        "commonName": "trash"
+      },
+      "chevron-right": {
+        "id": "85770",
+        "commonName": "chevron-right"
+      }
+    }
+  }
+}

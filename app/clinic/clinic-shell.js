@@ -44,7 +44,7 @@ function SlideNav({ items, current, preview }) {
     {items.map(([key, href, label, icon]) =>
       <Link key={key} href={preview && icon ? '/preview?page=' + key : href} data-key={key}
         aria-current={key === active ? 'page' : undefined} onClick={() => setChosen(key)}>
-        {icon && <Icon name={icon} />}{label}{icon && key === active && <Icon name="chevron" size={18} className="nav-chevron" />}
+        {icon && <Icon name={icon} />}{label}{icon && key === active && <Icon name="chevron" size={16} className="nav-chevron" />}
       </Link>)}
   </nav>;
 }
@@ -67,6 +67,7 @@ export function ClinicShell({ role, email, name, detail, avatar, preview, childr
         <p className="menu-label">Main Menu</p>
         <SlideNav items={studentLinks} current={current} preview={preview} />
         <form action={signOut} className="signout"><button className="quiet"><Icon name="logout" />Sign Out</button></form>
+        <a className="credit" href="https://icons8.com" target="_blank" rel="noreferrer">Icons by Icons8</a>
       </aside>
       <div className="student-main">
         <header className="topbar no-print">
@@ -90,6 +91,7 @@ export function ClinicShell({ role, email, name, detail, avatar, preview, childr
       <div className="sidebar-foot">
         <div className="staff-id" title={email}><b>{name ?? email}</b>{detail && <small>{detail}</small>}</div>
         <form action={signOut}><button className="quiet">Sign out</button></form>
+        <a className="credit" href="https://icons8.com" target="_blank" rel="noreferrer">Icons by Icons8</a>
       </div>
     </aside>
     <main id="clinic-content" className="workspace">{children}</main>
